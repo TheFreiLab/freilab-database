@@ -1,0 +1,100 @@
+.viz-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ── Inner tabs (Heatmap / Histogram) ── */
+.viz-inner-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 0.25rem;
+}
+
+.viz-inner-tabs button {
+  padding: 0.5rem 1.25rem;
+  border: none;
+  background: none;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.viz-inner-tabs button:hover { color: var(--text); }
+.viz-inner-tabs button.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+
+/* ── Controls bar ── */
+.viz-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.viz-ctrl {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.viz-ctrl span {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.viz-ctrl select {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.82rem;
+  color: var(--text);
+  background: #fff;
+  cursor: pointer;
+  min-width: 110px;
+}
+.viz-ctrl select:focus { outline: none; border-color: var(--primary); }
+
+.viz-ctrl--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+  padding-bottom: 2px;
+}
+.viz-ctrl--inline input[type="checkbox"] { cursor: pointer; }
+.viz-ctrl--inline span {
+  font-size: 0.82rem;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.viz-stat {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  align-self: flex-end;
+  padding-bottom: 4px;
+}
+
+/* ── Plot area ── */
+.viz-loading {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  padding: 1rem 0;
+}
+
+.viz-plot {
+  width: 100%;
+  min-height: 480px;
+  transition: opacity 0.2s;
+}

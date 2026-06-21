@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import CompoundTable from '../components/CompoundTable'
+import VizPanel from '../components/VizPanel'
 import './LibraryPage.css'
 
 export default function LibraryPage() {
   const { id } = useParams()
   const [library, setLibrary] = useState(null)
-  const [error, setError]     = useState(null)
+  const [error,   setError]   = useState(null)
+  const [view,    setView]    = useState('table')
 
   useEffect(() => {
     setLibrary(null)
     setError(null)
+    setView('table')
     fetch(`/data/libraries/${id}.json`)
       .then(r => { if (!r.ok) throw new Error(`${r.status} ${r.statusText}`); return r.json() })
       .then(setLibrary)
@@ -52,7 +55,13 @@ export default function LibraryPage() {
           </div>
         </div>
 
-        <CompoundTable library={library} />
+        <div className="view-tabs">
+          <button className={view === 'table' ? 'active' : ''} onClick={() => setView('table')}>Table</button>
+          <button className={view === 'viz'   ? 'active' : ''} onClick={() => setView('viz')}>Visualisations</button>
+        </div>
+
+        {view === 'table' && <CompoundTable library={library} />}
+        {view === 'viz'   && <VizPanel      library={library} />}
       </div>
     </main>
   )
