@@ -1,4 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useCallback } from 'react'
+import { Link } from 'react-router-dom'
+import StructurePopover from './StructurePopover'
 import './CompoundTable.css'
 
 const PER_PAGE = 50
@@ -36,9 +38,22 @@ export default function CompoundTable({ library }) {
   const [sortDir, setSortDir] = useState('asc')
   const [page,    setPage]    = useState(1)
 
+  // Hover-popover state
+  const [hovered, setHovered]       = useState(null) // {compound, anchorRect}
+  const leaveTimer                  = useRef(null)
+
   const { positions, properties, compounds } = library
 
-  // Column definitions derived from the library schema — nothing hardcoded
+  // O(1) lookup: positionKey → code → building-block object
+  const bbLookup = useMemo(() => {
+    const map = {}
+    for (const [posKey, bbs] of Object.entries(library.building_blocks)) {
+      map[posKey] = {}
+      for (const bb of bbs) map[posKey][bb.code] = bb
+    }
+    return map
+  }, [library.building_blocks])
+
   const columns = useMemo(() => [
     { key: 'id', label: 'ID', type: 'id' },
     ...positions.map(p => ({ key: p.key, label: p.label, type: 'block' })),
@@ -46,12 +61,8 @@ export default function CompoundTable({ library }) {
   ], [positions, properties])
 
   function handleSort(key) {
-    if (sortKey === key) {
-      setSortDir(d => d === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSortKey(key)
-      setSortDir('asc')
-    }
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(key); setSortDir('asc') }
     setPage(1)
   }
 
@@ -66,8 +77,7 @@ export default function CompoundTable({ library }) {
         if (av === null && bv === null) return 0
         if (av === null) return 1
         if (bv === null) return -1
-        if (typeof av === 'string') return sortDir === 'asc'
-          ? av.localeCompare(bv) : bv.localeCompare(av)
+        if (typeof av === 'string') return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av)
         return sortDir === 'asc' ? av - bv : bv - av
       })
     }
@@ -79,6 +89,27 @@ export default function CompoundTable({ library }) {
   const pageSlice  = filtered.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE)
 
   function onSearch(e) { setSearch(e.target.value); setPage(1) }
+
+  // ── Hover handlers (delay prevents flicker when crossing cell boundaries) ──
+  const handleRowEnter = useCallback((compound, e) => {
+    clearTimeout(leaveTimer.current)
+    setHovered({ compound, anchorRect: e.currentTarget.getBoundingClientRect() })
+  }, [])
+
+  const handleRowLeave = useCallback(() => {
+    leaveTimer.current = setTimeout(() => setHovered(null), 80)
+  }, [])
+
+  const handlePopoverEnter = useCallback(() => {
+    clearTimeout(leaveTimer.current)
+  }, [])
+
+  const handlePopoverLeave = useCallback(() => {
+    setHovered(null)
+  }, [])
+
+  const compoundUrl = (id) =>
+    `/compound/${library.id}/${encodeURIComponent(id)}`
 
   return (
     <div className="compound-table-wrap">
@@ -104,10 +135,7 @@ export default function CompoundTable({ library }) {
               {columns.map(col => (
                 <th
                   key={col.key}
-                  className={[
-                    col.type,
-                    sortKey === col.key ? 'sorted' : '',
-                  ].join(' ')}
+                  className={[col.type, sortKey === col.key ? 'sorted' : ''].join(' ')}
                   onClick={() => handleSort(col.key)}
                 >
                   <span className="th-inner">
@@ -121,13 +149,15 @@ export default function CompoundTable({ library }) {
           </thead>
           <tbody>
             {pageSlice.map(compound => (
-              <tr key={compound.id}>
+              <tr
+                key={compound.id}
+                onMouseEnter={(e) => handleRowEnter(compound, e)}
+                onMouseLeave={handleRowLeave}
+              >
                 {columns.map(col => {
                   if (col.key === 'id') return (
                     <td key="id" className="col-id">
-                      <a href={`/compound/${library.id}/${compound.id}`}>
-                        {compound.id}
-                      </a>
+                      <Link to={compoundUrl(compound.id)}>{compound.id}</Link>
                     </td>
                   )
                   if (col.type === 'block') return (
@@ -135,15 +165,11 @@ export default function CompoundTable({ library }) {
                       {compound.blocks[col.key] ?? <span className="missing">—</span>}
                     </td>
                   )
-                  // property column
-                  const raw = compound.props[col.key]
+                  const raw     = compound.props[col.key]
                   const display = formatVal(raw, col)
                   return (
                     <td key={col.key} className="col-prop">
-                      {display !== null
-                        ? display
-                        : <span className="missing">—</span>
-                      }
+                      {display !== null ? display : <span className="missing">—</span>}
                     </td>
                   )
                 })}
@@ -163,24 +189,26 @@ export default function CompoundTable({ library }) {
       {/* ── Pagination ── */}
       {totalPages > 1 && (
         <div className="pagination">
-          <button
-            className="page-btn"
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-            disabled={safePage === 1}
-          >
+          <button className="page-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={safePage === 1}>
             ← Prev
           </button>
-          <span className="page-info">
-            Page {safePage} of {totalPages}
-          </span>
-          <button
-            className="page-btn"
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-            disabled={safePage === totalPages}
-          >
+          <span className="page-info">Page {safePage} of {totalPages}</span>
+          <button className="page-btn" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}>
             Next →
           </button>
         </div>
+      )}
+
+      {/* ── Hover popover ── */}
+      {hovered && (
+        <StructurePopover
+          compound={hovered.compound}
+          anchorRect={hovered.anchorRect}
+          positions={positions}
+          bbLookup={bbLookup}
+          onMouseEnter={handlePopoverEnter}
+          onMouseLeave={handlePopoverLeave}
+        />
       )}
     </div>
   )

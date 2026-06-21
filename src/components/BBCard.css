@@ -1,0 +1,42 @@
+.bb-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.bb-pos-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.bb-code {
+  font-size: 0.78rem;
+  font-family: monospace;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* SVG wrapper — scale the embedded SVG via CSS */
+.bb-svg { line-height: 0; }
+.bb-svg svg { display: block; }
+
+.bb-card--sm .bb-svg svg { width: 120px; height: 100px; }
+.bb-card--lg .bb-svg svg { width: 220px; height: 180px; }
+
+.bb-svg--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  text-align: center;
+  padding: 4px;
+}
+.bb-card--sm  .bb-svg--placeholder { width: 120px; height: 100px; }
+.bb-card--lg  .bb-svg--placeholder { width: 220px; height: 180px; }
