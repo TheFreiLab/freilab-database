@@ -1,0 +1,14 @@
+{
+  "libraries": [
+    {
+      "id": "IrCpSB",
+      "title": "Ir Cp Schiff-Base Library",
+      "description": "1,440 iridium Cp Schiff-base compounds from a combinatorial library screened for antibacterial activity against S. aureus and E. coli, and for cytotoxicity against HEK293T cells.",
+      "metal": "Ir",
+      "scaffold": "Cp Schiff-Base",
+      "doi": null,
+      "compound_count": 1440,
+      "position_count": 3
+    }
+  ]
+}
