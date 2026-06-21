@@ -23,6 +23,24 @@
 
 .result-count { font-size: 0.82rem; color: var(--text-muted); }
 
+.page-size-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.page-size-select {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.82rem;
+  color: var(--text);
+  background: #fff;
+  cursor: pointer;
+}
+.page-size-select:focus { outline: none; border-color: var(--primary); }
+
 /* ── Table container ── */
 .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
 

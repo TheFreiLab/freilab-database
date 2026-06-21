@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import StructurePopover from './StructurePopover'
 import './CompoundTable.css'
 
-const PER_PAGE = 50
+const PAGE_SIZE_OPTIONS = [50, 100, 250, 'All']
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -33,10 +33,11 @@ function SortIcon({ dir }) {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function CompoundTable({ library }) {
-  const [search,  setSearch]  = useState('')
-  const [sortKey, setSortKey] = useState(null)
-  const [sortDir, setSortDir] = useState('asc')
-  const [page,    setPage]    = useState(1)
+  const [search,   setSearch]   = useState('')
+  const [sortKey,  setSortKey]  = useState(null)
+  const [sortDir,  setSortDir]  = useState('asc')
+  const [page,     setPage]     = useState(1)
+  const [pageSize, setPageSize] = useState(50)
 
   // Hover-popover state
   const [hovered, setHovered]       = useState(null) // {compound, anchorRect}
@@ -84,11 +85,18 @@ export default function CompoundTable({ library }) {
     return list
   }, [compounds, search, sortKey, sortDir, positions])
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE))
+  const perPage    = pageSize === 'All' ? filtered.length : pageSize
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage))
   const safePage   = Math.min(page, totalPages)
-  const pageSlice  = filtered.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE)
+  const pageSlice  = filtered.slice((safePage - 1) * perPage, safePage * perPage)
 
   function onSearch(e) { setSearch(e.target.value); setPage(1) }
+
+  function onPageSize(e) {
+    const val = e.target.value === 'All' ? 'All' : Number(e.target.value)
+    setPageSize(val)
+    setPage(1)
+  }
 
   // ── Hover handlers (delay prevents flicker when crossing cell boundaries) ──
   const handleRowEnter = useCallback((compound, e) => {
@@ -122,6 +130,14 @@ export default function CompoundTable({ library }) {
           value={search}
           onChange={onSearch}
         />
+        <label className="page-size-label">
+          Show
+          <select className="page-size-select" value={pageSize} onChange={onPageSize}>
+            {PAGE_SIZE_OPTIONS.map(o => (
+              <option key={o} value={o}>{o}</option>
+            ))}
+          </select>
+        </label>
         <span className="result-count">
           {filtered.length.toLocaleString()} of {compounds.length.toLocaleString()} compounds
         </span>
