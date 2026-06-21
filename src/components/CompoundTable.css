@@ -37,7 +37,7 @@
   transition: border-color 0.15s, background 0.15s;
 }
 .filter-toggle-btn:hover { border-color: var(--primary); color: var(--primary); }
-.filter-toggle-btn.active { border-color: var(--primary); background: #f0fdfa; color: var(--primary); }
+.filter-toggle-btn.active { border-color: var(--primary); background: #e8f0fe; color: var(--primary); }
 
 .filter-badge {
   display: inline-flex;

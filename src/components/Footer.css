@@ -1,6 +1,7 @@
 .site-footer {
-  background: var(--nav-bg);
-  color: rgba(255, 255, 255, 0.55);
+  background: #f9fafb;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
   font-size: 0.82rem;
   margin-top: auto;
 }
@@ -17,9 +18,9 @@
 }
 
 .footer-inner a {
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--primary);
   text-decoration: none;
 }
-.footer-inner a:hover { color: #fff; text-decoration: none; }
+.footer-inner a:hover { text-decoration: underline; }
 
-.footer-note { opacity: 0.7; }
+.footer-note { opacity: 0.8; }

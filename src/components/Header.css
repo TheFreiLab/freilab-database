@@ -1,47 +1,67 @@
 .site-header {
   background: var(--nav-bg);
-  color: var(--nav-text);
+  border-bottom: 1px solid var(--nav-border);
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
 }
 
 .nav-inner {
   max-width: var(--max-width);
   margin: 0 auto;
   padding: 0 1.5rem;
-  height: 60px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.site-title {
-  color: var(--nav-text);
-  font-weight: 600;
-  font-size: 1rem;
-  letter-spacing: 0.01em;
+/* ── Logo + subtitle ── */
+.site-logo-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   text-decoration: none;
 }
-.site-title:hover { text-decoration: none; opacity: 0.9; }
+.site-logo-link:hover { text-decoration: none; opacity: 0.85; }
 
+.site-logo {
+  height: 38px;
+  width: auto;
+  display: block;
+}
+
+.site-subtitle {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--nav-text-muted);
+  border-left: 1px solid var(--nav-border);
+  padding-left: 14px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+/* ── Nav links ── */
 .nav-links {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
-  gap: 1.5rem;
+  gap: 1.75rem;
+  align-items: center;
 }
 
 .nav-links a {
-  color: rgba(255, 255, 255, 0.75);
-  font-size: 0.9rem;
+  color: var(--nav-text-muted);
+  font-size: 0.88rem;
+  font-weight: 500;
   text-decoration: none;
   transition: color 0.15s;
 }
 .nav-links a:hover,
 .nav-links a.active {
-  color: #ffffff;
+  color: var(--primary);
   text-decoration: none;
 }
