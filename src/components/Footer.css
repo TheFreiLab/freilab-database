@@ -1,0 +1,25 @@
+.site-footer {
+  background: var(--nav-bg);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.82rem;
+  margin-top: auto;
+}
+
+.footer-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.footer-inner a {
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+}
+.footer-inner a:hover { color: #fff; text-decoration: none; }
+
+.footer-note { opacity: 0.7; }

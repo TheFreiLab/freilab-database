@@ -1,0 +1,9 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# SPA catch-all — lets React Router handle all routes client-side
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
