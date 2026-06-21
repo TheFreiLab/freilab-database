@@ -9,6 +9,16 @@
       "doi": null,
       "compound_count": 1440,
       "position_count": 3
+    },
+    {
+      "id": "TzLib",
+      "title": "Metal-Triazole Combinatorial Library",
+      "description": "864 metal-triazole compounds from two combinatorial series (Tz-4-P and Tz-1-MP) across multiple metal scaffolds (IrCN, Re(CO)₃, Mn(CO)₃, RuCy), screened for antibacterial activity against S. aureus and cytotoxicity against HEK293T cells.",
+      "metal": "Ir / Re / Mn / Ru",
+      "scaffold": "Triazole",
+      "doi": "10.1038/s41467-025-67341-z",
+      "compound_count": 864,
+      "position_count": 3
     }
   ]
 }
