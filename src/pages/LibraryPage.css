@@ -28,6 +28,49 @@
 .loading-msg, .error-msg { color: var(--text-muted); padding: 1rem 0; }
 .error-msg { color: #dc2626; }
 
+/* ── Filter bar (above tabs) ── */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 0.75rem;
+}
+
+.filter-active-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.filter-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--text);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.filter-toggle-btn:hover { border-color: var(--primary); color: var(--primary); }
+.filter-toggle-btn.active { border-color: var(--primary); background: #f0fdfa; color: var(--primary); font-weight: 600; }
+
+.filter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
 /* ── View tabs ── */
 .view-tabs {
   display: flex;

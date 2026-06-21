@@ -1,7 +1,6 @@
 import { useState, useMemo, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import StructurePopover from './StructurePopover'
-import FilterPanel from './FilterPanel'
 import './CompoundTable.css'
 
 const PAGE_SIZE_OPTIONS = [50, 100, 250, 'All']
@@ -33,23 +32,18 @@ function SortIcon({ dir }) {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function CompoundTable({ library }) {
-  const [search,      setSearch]      = useState('')
-  const [sortKey,     setSortKey]     = useState(null)
-  const [sortDir,     setSortDir]     = useState('asc')
-  const [page,        setPage]        = useState(1)
-  const [pageSize,    setPageSize]    = useState(50)
-  const [showFilters, setShowFilters] = useState(false)
-  const [bbFilters,   setBBFilters]   = useState({})   // { posKey: code | '' }
-  const [propFilters, setPropFilters] = useState({})   // { propKey: { min, max } }
+export default function CompoundTable({ library, compounds }) {
+  const [search,   setSearch]   = useState('')
+  const [sortKey,  setSortKey]  = useState(null)
+  const [sortDir,  setSortDir]  = useState('asc')
+  const [page,     setPage]     = useState(1)
+  const [pageSize, setPageSize] = useState(50)
 
-  // Hover-popover state
-  const [hovered, setHovered]       = useState(null) // {compound, anchorRect}
-  const leaveTimer                  = useRef(null)
+  const [hovered, setHovered] = useState(null)
+  const leaveTimer            = useRef(null)
 
-  const { positions, properties, compounds } = library
+  const { positions, properties } = library
 
-  // O(1) lookup: positionKey → code → building-block object
   const bbLookup = useMemo(() => {
     const map = {}
     for (const [posKey, bbs] of Object.entries(library.building_blocks)) {
@@ -58,50 +52,6 @@ export default function CompoundTable({ library }) {
     }
     return map
   }, [library.building_blocks])
-
-  // Compute min/max for each numeric property across all compounds
-  const propRanges = useMemo(() => {
-    const ranges = {}
-    for (const prop of properties) {
-      if (prop.role === 'replicate') continue
-      let mn = Infinity, mx = -Infinity
-      for (const c of compounds) {
-        const v = getPropValue(c, prop.key, positions)
-        if (v !== null && v !== undefined) {
-          if (v < mn) mn = v
-          if (v > mx) mx = v
-        }
-      }
-      if (mn !== Infinity) ranges[prop.key] = { min: mn, max: mx }
-    }
-    return ranges
-  }, [compounds, properties, positions])
-
-  const handleBBFilter = useCallback((posKey, code) => {
-    setBBFilters(prev => ({ ...prev, [posKey]: code }))
-    setPage(1)
-  }, [])
-
-  const handlePropFilter = useCallback((propKey, bound, value) => {
-    setPropFilters(prev => ({
-      ...prev,
-      [propKey]: { ...(prev[propKey] ?? {}), [bound]: value },
-    }))
-    setPage(1)
-  }, [])
-
-  const clearFilters = useCallback(() => {
-    setBBFilters({})
-    setPropFilters({})
-    setPage(1)
-  }, [])
-
-  const activeFilterCount = useMemo(() => {
-    let n = 0
-    for (const v of Object.values(bbFilters))   if (v) n++
-    for (const f of Object.values(propFilters))  { if (f.min !== '' && f.min != null) n++; if (f.max !== '' && f.max != null) n++ }
-    return n
-  }, [bbFilters, propFilters])
 
   const columns = useMemo(() => [
     { key: 'id', label: 'ID', type: 'id' },
@@ -115,31 +65,19 @@ export default function CompoundTable({ library }) {
     setPage(1)
   }
 
+  // Reset page when upstream filter changes the compound list
+  const prevCompoundsRef = useRef(compounds)
+  if (prevCompoundsRef.current !== compounds) {
+    prevCompoundsRef.current = compounds
+    // Don't call setPage here — causes render loop. Use the safePage clamp below.
+  }
+
   const filtered = useMemo(() => {
     let list = compounds
 
-    // Text search
     const q = search.trim().toLowerCase()
     if (q) list = list.filter(c => c.id.toLowerCase().includes(q))
 
-    // BB filters
-    for (const [posKey, code] of Object.entries(bbFilters)) {
-      if (code) list = list.filter(c => c.blocks[posKey] === code)
-    }
-
-    // Property range filters
-    for (const [propKey, f] of Object.entries(propFilters)) {
-      if (f.min !== '' && f.min != null) {
-        const minVal = parseFloat(f.min)
-        list = list.filter(c => { const v = getPropValue(c, propKey, positions); return v !== null && v >= minVal })
-      }
-      if (f.max !== '' && f.max != null) {
-        const maxVal = parseFloat(f.max)
-        list = list.filter(c => { const v = getPropValue(c, propKey, positions); return v !== null && v <= maxVal })
-      }
-    }
-
-    // Sort
     if (sortKey) {
       list = [...list].sort((a, b) => {
         const av = getPropValue(a, sortKey, positions)
@@ -152,7 +90,7 @@ export default function CompoundTable({ library }) {
       })
     }
     return list
-  }, [compounds, search, bbFilters, propFilters, sortKey, sortDir, positions])
+  }, [compounds, search, sortKey, sortDir, positions])
 
   const perPage    = pageSize === 'All' ? filtered.length : pageSize
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage))
@@ -167,7 +105,6 @@ export default function CompoundTable({ library }) {
     setPage(1)
   }
 
-  // ── Hover handlers (delay prevents flicker when crossing cell boundaries) ──
   const handleRowEnter = useCallback((compound, e) => {
     clearTimeout(leaveTimer.current)
     setHovered({ compound, anchorRect: e.currentTarget.getBoundingClientRect() })
@@ -177,16 +114,10 @@ export default function CompoundTable({ library }) {
     leaveTimer.current = setTimeout(() => setHovered(null), 80)
   }, [])
 
-  const handlePopoverEnter = useCallback(() => {
-    clearTimeout(leaveTimer.current)
-  }, [])
+  const handlePopoverEnter = useCallback(() => clearTimeout(leaveTimer.current), [])
+  const handlePopoverLeave = useCallback(() => setHovered(null), [])
 
-  const handlePopoverLeave = useCallback(() => {
-    setHovered(null)
-  }, [])
-
-  const compoundUrl = (id) =>
-    `/compound/${library.id}/${encodeURIComponent(id)}`
+  const compoundUrl = (id) => `/compound/${library.id}/${encodeURIComponent(id)}`
 
   return (
     <div className="compound-table-wrap">
@@ -199,13 +130,6 @@ export default function CompoundTable({ library }) {
           value={search}
           onChange={onSearch}
         />
-        <button
-          className={`filter-toggle-btn${showFilters ? ' active' : ''}`}
-          onClick={() => setShowFilters(v => !v)}
-        >
-          Filters
-          {activeFilterCount > 0 && <span className="filter-badge">{activeFilterCount}</span>}
-        </button>
         <label className="page-size-label">
           Show
           <select className="page-size-select" value={pageSize} onChange={onPageSize}>
@@ -218,22 +142,6 @@ export default function CompoundTable({ library }) {
           {filtered.length.toLocaleString()} of {compounds.length.toLocaleString()} compounds
         </span>
       </div>
-
-      {/* ── Filter panel ── */}
-      {showFilters && (
-        <FilterPanel
-          positions={positions}
-          bbLookup={bbLookup}
-          bbFilters={bbFilters}
-          onBBFilter={handleBBFilter}
-          properties={properties}
-          propFilters={propFilters}
-          onPropFilter={handlePropFilter}
-          propRanges={propRanges}
-          onClear={clearFilters}
-          activeCount={activeFilterCount}
-        />
-      )}
 
       {/* ── Table ── */}
       <div className="table-scroll">
@@ -286,7 +194,7 @@ export default function CompoundTable({ library }) {
             {pageSlice.length === 0 && (
               <tr>
                 <td colSpan={columns.length} className="empty-row">
-                  No compounds match "{search}"
+                  No compounds match{search ? ` "${search}"` : ' current filters'}
                 </td>
               </tr>
             )}
