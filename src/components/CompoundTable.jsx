@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import StructurePopover from './StructurePopover'
+import FilterPanel from './FilterPanel'
 import './CompoundTable.css'
 
 const PAGE_SIZE_OPTIONS = [50, 100, 250, 'All']
@@ -33,11 +34,14 @@ function SortIcon({ dir }) {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function CompoundTable({ library }) {
-  const [search,   setSearch]   = useState('')
-  const [sortKey,  setSortKey]  = useState(null)
-  const [sortDir,  setSortDir]  = useState('asc')
-  const [page,     setPage]     = useState(1)
-  const [pageSize, setPageSize] = useState(50)
+  const [search,      setSearch]      = useState('')
+  const [sortKey,     setSortKey]     = useState(null)
+  const [sortDir,     setSortDir]     = useState('asc')
+  const [page,        setPage]        = useState(1)
+  const [pageSize,    setPageSize]    = useState(50)
+  const [showFilters, setShowFilters] = useState(false)
+  const [bbFilters,   setBBFilters]   = useState({})   // { posKey: code | '' }
+  const [propFilters, setPropFilters] = useState({})   // { propKey: { min, max } }
 
   // Hover-popover state
   const [hovered, setHovered]       = useState(null) // {compound, anchorRect}
@@ -55,6 +59,50 @@ export default function CompoundTable({ library }) {
     return map
   }, [library.building_blocks])
 
+  // Compute min/max for each numeric property across all compounds
+  const propRanges = useMemo(() => {
+    const ranges = {}
+    for (const prop of properties) {
+      if (prop.role === 'replicate') continue
+      let mn = Infinity, mx = -Infinity
+      for (const c of compounds) {
+        const v = getPropValue(c, prop.key, positions)
+        if (v !== null && v !== undefined) {
+          if (v < mn) mn = v
+          if (v > mx) mx = v
+        }
+      }
+      if (mn !== Infinity) ranges[prop.key] = { min: mn, max: mx }
+    }
+    return ranges
+  }, [compounds, properties, positions])
+
+  const handleBBFilter = useCallback((posKey, code) => {
+    setBBFilters(prev => ({ ...prev, [posKey]: code }))
+    setPage(1)
+  }, [])
+
+  const handlePropFilter = useCallback((propKey, bound, value) => {
+    setPropFilters(prev => ({
+      ...prev,
+      [propKey]: { ...(prev[propKey] ?? {}), [bound]: value },
+    }))
+    setPage(1)
+  }, [])
+
+  const clearFilters = useCallback(() => {
+    setBBFilters({})
+    setPropFilters({})
+    setPage(1)
+  }, [])
+
+  const activeFilterCount = useMemo(() => {
+    let n = 0
+    for (const v of Object.values(bbFilters))   if (v) n++
+    for (const f of Object.values(propFilters))  { if (f.min !== '' && f.min != null) n++; if (f.max !== '' && f.max != null) n++ }
+    return n
+  }, [bbFilters, propFilters])
+
   const columns = useMemo(() => [
     { key: 'id', label: 'ID', type: 'id' },
     ...positions.map(p => ({ key: p.key, label: p.label, type: 'block' })),
@@ -69,8 +117,29 @@ export default function CompoundTable({ library }) {
 
   const filtered = useMemo(() => {
     let list = compounds
+
+    // Text search
     const q = search.trim().toLowerCase()
     if (q) list = list.filter(c => c.id.toLowerCase().includes(q))
+
+    // BB filters
+    for (const [posKey, code] of Object.entries(bbFilters)) {
+      if (code) list = list.filter(c => c.blocks[posKey] === code)
+    }
+
+    // Property range filters
+    for (const [propKey, f] of Object.entries(propFilters)) {
+      if (f.min !== '' && f.min != null) {
+        const minVal = parseFloat(f.min)
+        list = list.filter(c => { const v = getPropValue(c, propKey, positions); return v !== null && v >= minVal })
+      }
+      if (f.max !== '' && f.max != null) {
+        const maxVal = parseFloat(f.max)
+        list = list.filter(c => { const v = getPropValue(c, propKey, positions); return v !== null && v <= maxVal })
+      }
+    }
+
+    // Sort
     if (sortKey) {
       list = [...list].sort((a, b) => {
         const av = getPropValue(a, sortKey, positions)
@@ -83,7 +152,7 @@ export default function CompoundTable({ library }) {
       })
     }
     return list
-  }, [compounds, search, sortKey, sortDir, positions])
+  }, [compounds, search, bbFilters, propFilters, sortKey, sortDir, positions])
 
   const perPage    = pageSize === 'All' ? filtered.length : pageSize
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage))
@@ -130,6 +199,13 @@ export default function CompoundTable({ library }) {
           value={search}
           onChange={onSearch}
         />
+        <button
+          className={`filter-toggle-btn${showFilters ? ' active' : ''}`}
+          onClick={() => setShowFilters(v => !v)}
+        >
+          Filters
+          {activeFilterCount > 0 && <span className="filter-badge">{activeFilterCount}</span>}
+        </button>
         <label className="page-size-label">
           Show
           <select className="page-size-select" value={pageSize} onChange={onPageSize}>
@@ -142,6 +218,22 @@ export default function CompoundTable({ library }) {
           {filtered.length.toLocaleString()} of {compounds.length.toLocaleString()} compounds
         </span>
       </div>
+
+      {/* ── Filter panel ── */}
+      {showFilters && (
+        <FilterPanel
+          positions={positions}
+          bbLookup={bbLookup}
+          bbFilters={bbFilters}
+          onBBFilter={handleBBFilter}
+          properties={properties}
+          propFilters={propFilters}
+          onPropFilter={handlePropFilter}
+          propRanges={propRanges}
+          onClear={clearFilters}
+          activeCount={activeFilterCount}
+        />
+      )}
 
       {/* ── Table ── */}
       <div className="table-scroll">
