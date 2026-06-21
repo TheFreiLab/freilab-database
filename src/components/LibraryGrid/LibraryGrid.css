@@ -1,0 +1,262 @@
+/* ── Metric switcher ──────────────────────────────────────────────────────── */
+.metric-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.metric-btn {
+  padding: 4px 10px;
+  border: 1px solid #C8CDD0;
+  border-radius: 14px;
+  background: #fff;
+  color: #4B5563;
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.metric-btn:hover {
+  background: #F0F4F6;
+  border-color: #9EADB5;
+}
+.metric-btn.active {
+  background: #0C4E60;
+  color: #fff;
+  border-color: #0C4E60;
+}
+.metric-unit {
+  opacity: 0.75;
+  font-size: 0.73rem;
+}
+
+/* ── LibraryGrid wrapper ──────────────────────────────────────────────────── */
+.library-grid-root {
+  position: relative;
+}
+
+.grid-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.sort-btn {
+  padding: 3px 10px;
+  border: 1px solid #C8CDD0;
+  border-radius: 4px;
+  background: #fff;
+  color: #4B5563;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.sort-btn:hover { background: #F0F4F6; }
+.sort-btn.active { background: #EEF5FA; border-color: #0C4E60; color: #0C4E60; font-weight: 600; }
+
+/* ── Facet selector (IrCpSB) ─────────────────────────────────────────────── */
+.facet-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.facet-tab {
+  padding: 3px 12px;
+  border: 1px solid #C8CDD0;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.facet-tab.active {
+  border-color: #0072B2;
+  background: #EEF5FA;
+  font-weight: 600;
+}
+.facet-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* ── Series selector (TzLib) ─────────────────────────────────────────────── */
+.series-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.series-tab {
+  padding: 4px 14px;
+  border: 1px solid #C8CDD0;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.82rem;
+}
+.series-tab.active {
+  border-color: #0C4E60;
+  background: #EEF5FA;
+  font-weight: 600;
+}
+
+/* ── Small multiples layout ──────────────────────────────────────────────── */
+.small-multiples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.small-multiple {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.facet-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ── Colour legend ──────────────────────────────────────────────────────── */
+.colour-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 0.75rem;
+  color: #6B7A80;
+}
+.colour-legend-bar {
+  width: 100px;
+  height: 10px;
+  border-radius: 3px;
+  border: 1px solid #E3E8EA;
+}
+
+/* ── Tooltip ─────────────────────────────────────────────────────────────── */
+.grid-tooltip {
+  position: fixed;
+  z-index: 900;
+  pointer-events: none;
+  background: #fff;
+  border: 1px solid #D1D8DC;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  padding: 8px 10px;
+  min-width: 130px;
+  max-width: 300px;
+}
+.grid-tooltip-id {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1F2A2E;
+  margin-bottom: 4px;
+}
+.grid-tooltip-metric {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: #374151;
+  margin-bottom: 6px;
+}
+.metric-label { color: #6B7A80; }
+.metric-val   { font-weight: 600; }
+.grid-tooltip-bbs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.grid-tooltip-bb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.bb-label {
+  font-size: 0.68rem;
+  color: #6B7A80;
+  margin-bottom: 2px;
+}
+.bb-svg svg {
+  width: 72px;
+  height: 56px;
+  display: block;
+}
+
+/* ── Pinned card ─────────────────────────────────────────────────────────── */
+.pinned-card {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 260px;
+  background: #fff;
+  border: 1px solid #D1D8DC;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.13);
+  padding: 12px;
+  z-index: 100;
+}
+.pinned-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.pinned-card-id {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1F2A2E;
+}
+.pinned-card-close {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: #6B7A80;
+  line-height: 1;
+  padding: 0 2px;
+}
+.pinned-card-close:hover { color: #1F2A2E; }
+
+.pinned-card-metrics {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  margin-bottom: 10px;
+}
+.pinned-card-metrics td { padding: 2px 0; }
+.pm-label { color: #6B7A80; width: 55%; }
+.pm-val   { font-weight: 600; text-align: right; }
+.pm-unit  { font-size: 0.7rem; font-weight: 400; color: #6B7A80; }
+.pm-reps  { color: #9CA3AF; font-size: 0.7rem; text-align: right; padding-left: 4px; }
+
+.pinned-card-bbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.pinned-bb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.pinned-bb .bb-svg svg {
+  width: 90px;
+  height: 70px;
+}
+
+.pinned-card-3d { margin-top: 6px; }

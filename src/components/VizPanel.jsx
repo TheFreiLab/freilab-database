@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
+import LibraryGrid from './LibraryGrid'
+import SelectivityScatter from './SelectivityScatter'
 import './VizPanel.css'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -241,16 +243,18 @@ function HistogramView({ library }) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function VizPanel({ library }) {
-  const [tab, setTab] = useState('heatmap')
+  const [tab, setTab] = useState('grid')
 
   return (
     <div className="viz-panel">
       <div className="viz-inner-tabs">
-        <button className={tab === 'heatmap'   ? 'active' : ''} onClick={() => setTab('heatmap')}>Heatmap</button>
+        <button className={tab === 'grid'      ? 'active' : ''} onClick={() => setTab('grid')}>Grid</button>
+        <button className={tab === 'scatter'   ? 'active' : ''} onClick={() => setTab('scatter')}>Scatter</button>
         <button className={tab === 'histogram' ? 'active' : ''} onClick={() => setTab('histogram')}>Histogram</button>
       </div>
-      {tab === 'heatmap'   && <HeatmapView   library={library} />}
-      {tab === 'histogram' && <HistogramView  library={library} />}
+      {tab === 'grid'      && <LibraryGrid       library={library} />}
+      {tab === 'scatter'   && <SelectivityScatter library={library} />}
+      {tab === 'histogram' && <HistogramView      library={library} />}
     </div>
   )
 }

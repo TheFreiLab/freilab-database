@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import BBCard from '../components/BBCard'
+import ThreeDViewer from '../components/ThreeDViewer'
 import './CompoundDetailPage.css'
 
 // ── Property value formatting ────────────────────────────────────────────────
@@ -43,45 +44,6 @@ function PropRow({ prop, value }) {
       </td>
     </tr>
   )
-}
-
-// ── 3D viewer ────────────────────────────────────────────────────────────────
-
-function ThreeDViewer({ libId, compoundId }) {
-  const containerRef = useRef(null)
-  const [status, setStatus] = useState('loading') // loading | found | not-found
-
-  useEffect(() => {
-    const url = `/data/xyz/${libId}/${encodeURIComponent(compoundId)}.xyz`
-    fetch(url)
-      .then(r => { if (!r.ok) throw new Error('not found'); return r.text() })
-      .then(xyz => {
-        setStatus('found')
-        // Load 3Dmol.js lazily
-        const existing = document.getElementById('3dmol-script')
-        const init = () => {
-          const viewer = window.$3Dmol.createViewer(containerRef.current, { backgroundColor: 'white' })
-          viewer.addModel(xyz, 'xyz')
-          viewer.setStyle({}, { stick: { radius: 0.15 }, sphere: { scale: 0.25 } })
-          viewer.zoomTo()
-          viewer.render()
-        }
-        if (window.$3Dmol) {
-          init()
-        } else {
-          const script   = document.createElement('script')
-          script.id      = '3dmol-script'
-          script.src     = 'https://3dmol.org/build/3Dmol-min.js'
-          script.onload  = init
-          document.head.appendChild(script)
-        }
-      })
-      .catch(() => setStatus('not-found'))
-  }, [libId, compoundId])
-
-  if (status === 'loading') return <p className="viewer-msg">Checking for 3D structure…</p>
-  if (status === 'not-found') return <p className="viewer-msg viewer-msg--none">No 3D structure available for this compound.</p>
-  return <div ref={containerRef} className="mol-viewer" />
 }
 
 // ── Main page ─────────────────────────────────────────────────────────────────

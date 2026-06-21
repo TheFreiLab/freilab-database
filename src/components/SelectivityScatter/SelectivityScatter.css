@@ -1,0 +1,78 @@
+/* ── Shared series tabs (duplicated here so scatter doesn't depend on LibraryGrid.css) ── */
+.series-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.series-tab {
+  padding: 4px 14px;
+  border: 1px solid #C8CDD0;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.82rem;
+}
+.series-tab.active {
+  border-color: #0C4E60;
+  background: #EEF5FA;
+  font-weight: 600;
+}
+
+.scatter-root {
+  position: relative;
+  user-select: none;
+}
+
+.scatter-mode-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.scatter-mode-tab {
+  padding: 3px 12px;
+  border: 1px solid #C8CDD0;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+.scatter-mode-tab.active {
+  background: #0C4E60;
+  color: #fff;
+  border-color: #0C4E60;
+}
+
+.scatter-svg-wrap {
+  overflow: visible;
+}
+
+.scatter-dot {
+  cursor: pointer;
+  transition: r 0.08s;
+}
+.scatter-dot:hover { r: 6px; }
+
+.scatter-axis-label {
+  font-size: 11px;
+  fill: #6B7A80;
+}
+.scatter-tick-label {
+  font-size: 9px;
+  fill: #6B7A80;
+}
+
+.scatter-tooltip {
+  position: fixed;
+  pointer-events: none;
+  z-index: 900;
+  background: #fff;
+  border: 1px solid #D1D8DC;
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.11);
+  padding: 7px 10px;
+  font-size: 0.78rem;
+  min-width: 120px;
+}
+.scatter-tooltip-id  { font-weight: 700; margin-bottom: 3px; color: #1F2A2E; }
+.scatter-tooltip-row { color: #4B5563; }
+.scatter-tooltip-row span { font-weight: 600; color: #1F2A2E; }
