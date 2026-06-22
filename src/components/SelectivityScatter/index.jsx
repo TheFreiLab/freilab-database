@@ -1,6 +1,8 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { adaptLibrary } from '../../data/vizAdapter'
 import { getFacetColor } from '../../theme/palette'
+import PinnedCard from '../LibraryGrid/PinnedCard'
+import '../LibraryGrid/LibraryGrid.css'
 import './SelectivityScatter.css'
 
 const MARGIN = { top: 20, right: 20, bottom: 54, left: 58 }
@@ -35,9 +37,19 @@ function niceLogTicks(min, max) {
   return ticks
 }
 
+function getTooltipSvgs(compound, bbByPosition) {
+  return Object.entries(compound.blocks ?? {})
+    .filter(([, code]) => code)
+    .flatMap(([pos, code]) => {
+      const bb = bbByPosition?.[pos]?.[code]
+      return bb?.svg ? [{ pos, code, svg: bb.svg, name: bb.name ?? code }] : []
+    })
+}
+
 export default function SelectivityScatter({ library }) {
   const adapted = useMemo(() => adaptLibrary(library), [library])
   const [seriesIdx, setSeriesIdx] = useState(0)
+  const [pinned, setPinned] = useState(null)
   const [tooltip, setTooltip] = useState(null)
   const tooltipRef = useRef(null)
 
@@ -45,11 +57,11 @@ export default function SelectivityScatter({ library }) {
   const [xKey, setXKey] = useState(() => grid?.scatterDefaultX)
   const [yKey, setYKey] = useState(() => grid?.scatterDefaultY)
 
-  // Reset axes when series changes
   useEffect(() => {
     if (!grid) return
     setXKey(grid.scatterDefaultX)
     setYKey(grid.scatterDefaultY)
+    setPinned(null)
   }, [seriesIdx])
 
   useEffect(() => {
@@ -184,39 +196,65 @@ export default function SelectivityScatter({ library }) {
             const cx = scX(x)
             const cy = scY(y)
             if (!isFinite(cx) || !isFinite(cy)) return null
+            const isPinned = pinned?.id === compound.id
             return (
               <circle
                 key={compound.id}
                 className="scatter-dot"
                 cx={cx}
                 cy={cy}
-                r={4}
+                r={isPinned ? 6 : 4}
                 fill={getFacetColor(compound._facet, adapted.facetType)}
-                fillOpacity={0.8}
-                stroke="#fff"
-                strokeWidth={0.8}
+                fillOpacity={isPinned ? 1 : 0.8}
+                stroke={isPinned ? '#0C4E60' : '#fff'}
+                strokeWidth={isPinned ? 1.5 : 0.8}
                 onMouseEnter={e => setTooltip({ compound, clientX: e.clientX, clientY: e.clientY })}
                 onMouseMove={e => setTooltip(t => ({ ...t, clientX: e.clientX, clientY: e.clientY }))}
                 onMouseLeave={() => setTooltip(null)}
+                onClick={() => { setPinned(compound); setTooltip(null) }}
               />
             )
           })}
         </g>
       </svg>
 
+      {/* Hover tooltip */}
       {tooltip && (
-        <div ref={tooltipRef} className="scatter-tooltip">
-          <div className="scatter-tooltip-id">{tooltip.compound.id}</div>
-          <div className="scatter-tooltip-row">
-            {xAxis.label}: <span>{xAxis.getValue(tooltip.compound)?.toFixed(2) ?? '—'}</span>
+        <div ref={tooltipRef} className="grid-tooltip">
+          <div className="grid-tooltip-id">{tooltip.compound.id}</div>
+          <div className="grid-tooltip-metric">
+            <span className="metric-label">{xAxis.label}</span>
+            <span className="metric-val">{xAxis.getValue(tooltip.compound)?.toFixed(2) ?? '—'}</span>
           </div>
-          <div className="scatter-tooltip-row">
-            {yAxis.label}: <span>{yAxis.getValue(tooltip.compound)?.toFixed(2) ?? '—'}</span>
+          <div className="grid-tooltip-metric">
+            <span className="metric-label">{yAxis.label}</span>
+            <span className="metric-val">{yAxis.getValue(tooltip.compound)?.toFixed(2) ?? '—'}</span>
           </div>
-          <div className="scatter-tooltip-row">
-            {grid.facetPosition}: <span>{tooltip.compound._facet}</span>
-          </div>
+          {(() => {
+            const svgs = getTooltipSvgs(tooltip.compound, grid.bbByPosition)
+            return svgs.length > 0 && (
+              <div className="grid-tooltip-bbs">
+                {svgs.map(({ pos, code, svg, name }) => (
+                  <div key={pos} className="grid-tooltip-bb">
+                    <div className="bb-label">{pos}: {code}</div>
+                    <div className="bb-svg" dangerouslySetInnerHTML={{ __html: svg }} title={name} />
+                  </div>
+                ))}
+              </div>
+            )
+          })()}
         </div>
+      )}
+
+      {/* Pinned card */}
+      {pinned && (
+        <PinnedCard
+          compound={pinned}
+          allMetrics={grid.allMetrics}
+          libId={library.id}
+          bbByPosition={grid.bbByPosition}
+          onClose={() => setPinned(null)}
+        />
       )}
     </div>
   )
