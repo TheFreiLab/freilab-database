@@ -38,7 +38,7 @@ function niceLogTicks(min, max) {
 export default function SelectivityScatter({ library }) {
   const adapted = useMemo(() => adaptLibrary(library), [library])
   const [seriesIdx, setSeriesIdx] = useState(0)
-  const [mode, setMode] = useState(0) // 0 = activity vs tox, 1 = selectivity vs conversion
+  const [modeIdx, setModeIdx] = useState(0)
   const [tooltip, setTooltip] = useState(null) // { compound, clientX, clientY }
   const tooltipRef = useRef(null)
 
@@ -59,9 +59,9 @@ export default function SelectivityScatter({ library }) {
   if (!adapted) return null
   const grid = adapted.grids[seriesIdx]
   const compounds = grid.compounds
-
-  const xAxis = mode === 0 ? grid.scatterX  : grid.scatterX2
-  const yAxis = mode === 0 ? grid.scatterY  : grid.scatterY2
+  const modes = grid.scatterModes
+  const safeIdx = Math.min(modeIdx, modes.length - 1)
+  const { xAxis, yAxis } = modes[safeIdx]
 
   const points = useMemo(() => {
     return compounds.map(c => {
@@ -103,7 +103,7 @@ export default function SelectivityScatter({ library }) {
         <div className="series-tabs" style={{ marginBottom: 8 }}>
           {adapted.grids.map((g, i) => (
             <button key={g.id} className={`series-tab${i === seriesIdx ? ' active' : ''}`}
-              onClick={() => { setSeriesIdx(i); setMode(0) }}>
+              onClick={() => { setSeriesIdx(i); setModeIdx(0) }}>
               {g.seriesLabel ?? g.id}
             </button>
           ))}
@@ -112,12 +112,15 @@ export default function SelectivityScatter({ library }) {
 
       {/* Mode tabs */}
       <div className="scatter-mode-tabs">
-        <button className={`scatter-mode-tab${mode === 0 ? ' active' : ''}`} onClick={() => setMode(0)}>
-          {grid.scatterX.label} vs {grid.scatterY.label}
-        </button>
-        <button className={`scatter-mode-tab${mode === 1 ? ' active' : ''}`} onClick={() => setMode(1)}>
-          {grid.scatterX2.label} vs {grid.scatterY2.label}
-        </button>
+        {modes.map((m, i) => (
+          <button
+            key={i}
+            className={`scatter-mode-tab${i === safeIdx ? ' active' : ''}`}
+            onClick={() => setModeIdx(i)}
+          >
+            {m.label}
+          </button>
+        ))}
       </div>
 
       {/* SVG scatter */}
@@ -206,10 +209,10 @@ export default function SelectivityScatter({ library }) {
         <div ref={tooltipRef} className="scatter-tooltip">
           <div className="scatter-tooltip-id">{tooltip.compound.id}</div>
           <div className="scatter-tooltip-row">
-            {xAxis.label}: <span>{tooltip.compound ? xAxis.getValue(tooltip.compound)?.toFixed(2) : '—'}</span>
+            {xAxis.label}: <span>{xAxis.getValue(tooltip.compound)?.toFixed(2) ?? '—'}</span>
           </div>
           <div className="scatter-tooltip-row">
-            {yAxis.label}: <span>{tooltip.compound ? yAxis.getValue(tooltip.compound)?.toFixed(2) : '—'}</span>
+            {yAxis.label}: <span>{yAxis.getValue(tooltip.compound)?.toFixed(2) ?? '—'}</span>
           </div>
           <div className="scatter-tooltip-row">
             {grid.facetPosition}: <span>{tooltip.compound._facet}</span>
