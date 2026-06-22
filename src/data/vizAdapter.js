@@ -10,6 +10,18 @@ function naturalSort(a, b) {
   return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' })
 }
 
+// Ligand-based descriptors (Stage 7a) — aggregated over the organic building
+// blocks per compound. Shared across all libraries as scatter axis options.
+const LIGAND_DESCRIPTOR_AXES = [
+  { key: 'lig_mw',     label: 'Σ Ligand MW (Da)',      getValue: c => getPropAvg(c.props.lig_mw),     log: false },
+  { key: 'lig_tpsa',   label: 'Σ Ligand TPSA (Å²)',    getValue: c => getPropAvg(c.props.lig_tpsa),   log: false },
+  { key: 'lig_logp',   label: 'Mean Ligand logP',      getValue: c => getPropAvg(c.props.lig_logp),   log: false },
+  { key: 'lig_hbd',    label: 'Σ Ligand HBD',          getValue: c => getPropAvg(c.props.lig_hbd),    log: false },
+  { key: 'lig_hba',    label: 'Σ Ligand HBA',          getValue: c => getPropAvg(c.props.lig_hba),    log: false },
+  { key: 'lig_rotb',   label: 'Σ Ligand Rot. bonds',   getValue: c => getPropAvg(c.props.lig_rotb),   log: false },
+  { key: 'lig_arring', label: 'Σ Ligand Arom. rings',  getValue: c => getPropAvg(c.props.lig_arring), log: false },
+]
+
 // ── Per-library grid configurations ──────────────────────────────────────────
 
 const LIBRARY_CONFIGS = {
@@ -69,6 +81,7 @@ const LIBRARY_CONFIGS = {
           { key: 'conversion', label: 'Conversion (%)',       getValue: c => getPropAvg(c.props.conversion), log: false },
           { key: 'rt_target',  label: 'RT Target (min)',      getValue: c => getPropAvg(c.props.rt_target),  log: false },
           { key: 'rt_2plus',   label: 'RT 2+ (min)',          getValue: c => getPropAvg(c.props.rt_2plus),   log: false },
+          ...LIGAND_DESCRIPTOR_AXES,
         ],
         scatterDefaultX: 'sa_50',
         scatterDefaultY: 'hek_50',
@@ -118,6 +131,7 @@ const LIBRARY_CONFIGS = {
           { key: 'sdr',      label: 'Selectivity (SDR)',  getValue: c => getPropAvg(c.props.sdr),      log: false },
           { key: 'peak_pct', label: 'Conversion (%)',     getValue: c => getPropAvg(c.props.peak_pct), log: false },
           { key: 'rt',       label: 'RT (min)',           getValue: c => getPropAvg(c.props.rt),       log: false },
+          ...LIGAND_DESCRIPTOR_AXES,
         ],
         scatterDefaultX: 'mic',
         scatterDefaultY: 'tox_avg',
@@ -161,6 +175,7 @@ const LIBRARY_CONFIGS = {
           { key: 'sdr',      label: 'Selectivity (SDR)',  getValue: c => getPropAvg(c.props.sdr),      log: false },
           { key: 'peak_pct', label: 'Conversion (%)',     getValue: c => getPropAvg(c.props.peak_pct), log: false },
           { key: 'rt',       label: 'RT (min)',           getValue: c => getPropAvg(c.props.rt),       log: false },
+          ...LIGAND_DESCRIPTOR_AXES,
         ],
         scatterDefaultX: 'mic',
         scatterDefaultY: 'tox_avg',

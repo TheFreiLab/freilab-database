@@ -12,6 +12,10 @@ function fmtNum(n, unit) {
   if (unit === 'min') return `${n.toFixed(3)} min`
   if (unit === 'OD')  return n.toFixed(4)
   if (unit === 'µM')  return `${n.toFixed(2)} µM`
+  if (unit === 'Da')  return `${n.toFixed(1)} Da`
+  if (unit === 'Å²')  return `${n.toFixed(1)} Å²`
+  // Integer-valued counts (HBD/HBA/rings/rot. bonds) render without decimals
+  if (unit === null && Number.isInteger(n)) return String(n)
   return n.toFixed(2)
 }
 
@@ -91,11 +95,12 @@ export default function CompoundDetailPage() {
   }
 
   // Group properties for display
-  const grouped = { qc: [], primary: {}, derived: [], replicate: [] }
+  const grouped = { qc: [], primary: {}, derived: [], replicate: [], descriptor: [] }
   for (const prop of library.properties) {
     if (prop.role === 'qc')       grouped.qc.push(prop)
     else if (prop.role === 'derived')   grouped.derived.push(prop)
     else if (prop.role === 'replicate') grouped.replicate.push(prop)
+    else if (prop.role === 'descriptor') grouped.descriptor.push(prop)
     else {
       const g = prop.group ?? 'Other'
       if (!grouped.primary[g]) grouped.primary[g] = []
@@ -188,6 +193,17 @@ export default function CompoundDetailPage() {
                 <table className="props-table">
                   <tbody>
                     {grouped.derived.map(p => <PropRow key={p.key} prop={p} value={compound.props[p.key]} />)}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {grouped.descriptor.length > 0 && (
+              <div className="props-group">
+                <h3>Descriptors (ligand-based)</h3>
+                <table className="props-table">
+                  <tbody>
+                    {grouped.descriptor.map(p => <PropRow key={p.key} prop={p} value={compound.props[p.key]} />)}
                   </tbody>
                 </table>
               </div>

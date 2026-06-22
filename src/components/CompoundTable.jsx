@@ -56,7 +56,9 @@ export default function CompoundTable({ library, compounds }) {
   const columns = useMemo(() => [
     { key: 'id', label: 'ID', type: 'id' },
     ...positions.map(p => ({ key: p.key, label: p.label, type: 'block' })),
-    ...properties.map(p => ({ ...p, type: 'prop' })),
+    // Descriptors (role: descriptor) are kept out of the table to avoid column
+    // bloat; they surface in the scatter axes and the detail page instead.
+    ...properties.filter(p => p.role !== 'descriptor').map(p => ({ ...p, type: 'prop' })),
   ], [positions, properties])
 
   function handleSort(key) {
