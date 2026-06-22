@@ -209,7 +209,7 @@ export default function SelectivityScatter({ library }) {
                 stroke={isPinned ? '#0C4E60' : '#fff'}
                 strokeWidth={isPinned ? 1.5 : 0.8}
                 onMouseEnter={e => setTooltip({ compound, clientX: e.clientX, clientY: e.clientY })}
-                onMouseMove={e => setTooltip(t => ({ ...t, clientX: e.clientX, clientY: e.clientY }))}
+                onMouseMove={e => setTooltip({ compound, clientX: e.clientX, clientY: e.clientY })}
                 onMouseLeave={() => setTooltip(null)}
                 onClick={() => { setPinned(compound); setTooltip(null) }}
               />
