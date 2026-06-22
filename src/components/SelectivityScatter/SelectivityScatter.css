@@ -1,4 +1,4 @@
-/* ── Shared series tabs (duplicated here so scatter doesn't depend on LibraryGrid.css) ── */
+/* ── Shared series tabs ── */
 .series-tabs {
   display: flex;
   gap: 4px;
@@ -23,25 +23,48 @@
   user-select: none;
 }
 
-.scatter-mode-tabs {
+/* ── Axis dropdowns ── */
+.scatter-axis-selectors {
   display: flex;
-  gap: 4px;
-  margin-bottom: 10px;
+  gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
 }
-.scatter-mode-tab {
-  padding: 3px 12px;
+
+.scatter-axis-label-select {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: #4B5563;
+}
+
+.scatter-axis-label-select span {
+  font-weight: 600;
+  color: #1F2A2E;
+  white-space: nowrap;
+}
+
+.scatter-axis-label-select select {
+  padding: 4px 24px 4px 8px;
   border: 1px solid #C8CDD0;
   border-radius: 4px;
   background: #fff;
+  font-size: 0.82rem;
+  color: #1F2A2E;
   cursor: pointer;
-  font-size: 0.8rem;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236B7A80'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
 }
-.scatter-mode-tab.active {
-  background: #0C4E60;
-  color: #fff;
+
+.scatter-axis-label-select select:focus {
+  outline: none;
   border-color: #0C4E60;
 }
 
+/* ── SVG ── */
 .scatter-svg-wrap {
   overflow: visible;
 }
@@ -52,7 +75,7 @@
 }
 .scatter-dot:hover { r: 6px; }
 
-.scatter-axis-label {
+.scatter-axis-label-svg {
   font-size: 11px;
   fill: #6B7A80;
 }
@@ -61,6 +84,7 @@
   fill: #6B7A80;
 }
 
+/* ── Tooltip ── */
 .scatter-tooltip {
   position: fixed;
   pointer-events: none;

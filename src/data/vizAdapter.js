@@ -60,38 +60,18 @@ const LIBRARY_CONFIGS = {
             getValue: c => getPropAvg(c.props.ratio),
           },
         ],
-        scatterModes: [
-          {
-            label: 'Activity vs Tox',
-            xAxis: { key: 'sa_50',  label: 'S. aureus 50µM (OD)', getValue: c => getPropAvg(c.props.sa_50),  log: false },
-            yAxis: { key: 'hek_50', label: 'HEK293T (%)',          getValue: c => getPropAvg(c.props.hek_50), log: false },
-          },
-          {
-            label: 'Selectivity vs Conversion',
-            xAxis: { key: 'ratio',      label: 'Selectivity Ratio', getValue: c => getPropAvg(c.props.ratio)      },
-            yAxis: { key: 'conversion', label: 'Conversion (%)',     getValue: c => getPropAvg(c.props.conversion) },
-          },
-          {
-            label: 'S. aureus vs RT (Target)',
-            xAxis: { key: 'rt_target', label: 'RT Target (min)',      getValue: c => getPropAvg(c.props.rt_target) },
-            yAxis: { key: 'sa_50',     label: 'S. aureus 50µM (OD)', getValue: c => getPropAvg(c.props.sa_50)     },
-          },
-          {
-            label: 'Conversion vs RT (Target)',
-            xAxis: { key: 'rt_target', label: 'RT Target (min)', getValue: c => getPropAvg(c.props.rt_target)  },
-            yAxis: { key: 'conversion', label: 'Conversion (%)', getValue: c => getPropAvg(c.props.conversion) },
-          },
-          {
-            label: 'S. aureus vs RT (2+)',
-            xAxis: { key: 'rt_2plus', label: 'RT 2+ (min)',          getValue: c => getPropAvg(c.props.rt_2plus) },
-            yAxis: { key: 'sa_50',    label: 'S. aureus 50µM (OD)', getValue: c => getPropAvg(c.props.sa_50)    },
-          },
-          {
-            label: 'Conversion vs RT (2+)',
-            xAxis: { key: 'rt_2plus',   label: 'RT 2+ (min)',    getValue: c => getPropAvg(c.props.rt_2plus)   },
-            yAxis: { key: 'conversion', label: 'Conversion (%)', getValue: c => getPropAvg(c.props.conversion) },
-          },
+        scatterAxes: [
+          { key: 'sa_50',      label: 'S. aureus 50µM (OD)',  getValue: c => getPropAvg(c.props.sa_50),      log: false },
+          { key: 'sa_12',      label: 'S. aureus 12.5µM (OD)', getValue: c => getPropAvg(c.props.sa_12),    log: false },
+          { key: 'ec_50',      label: 'E. coli 50µM (OD)',    getValue: c => getPropAvg(c.props.ec_50),      log: false },
+          { key: 'hek_50',     label: 'HEK293T (%)',          getValue: c => getPropAvg(c.props.hek_50),     log: false },
+          { key: 'ratio',      label: 'Selectivity Ratio',    getValue: c => getPropAvg(c.props.ratio),      log: false },
+          { key: 'conversion', label: 'Conversion (%)',       getValue: c => getPropAvg(c.props.conversion), log: false },
+          { key: 'rt_target',  label: 'RT Target (min)',      getValue: c => getPropAvg(c.props.rt_target),  log: false },
+          { key: 'rt_2plus',   label: 'RT 2+ (min)',          getValue: c => getPropAvg(c.props.rt_2plus),   log: false },
         ],
+        scatterDefaultX: 'sa_50',
+        scatterDefaultY: 'hek_50',
       },
     ],
   },
@@ -132,28 +112,15 @@ const LIBRARY_CONFIGS = {
             getValue: c => getPropAvg(c.props.tox_avg),
           },
         ],
-        scatterModes: [
-          {
-            label: 'MIC vs HEK293T',
-            xAxis: { key: 'mic',     label: 'MIC S. aureus (µM)', getValue: c => getPropAvg(c.props.mic),     log: true  },
-            yAxis: { key: 'tox_avg', label: 'HEK293T growth (%)', getValue: c => getPropAvg(c.props.tox_avg), log: false },
-          },
-          {
-            label: 'Selectivity vs Conversion',
-            xAxis: { key: 'sdr',      label: 'Selectivity (SDR)', getValue: c => getPropAvg(c.props.sdr)      },
-            yAxis: { key: 'peak_pct', label: 'Conversion (%)',    getValue: c => getPropAvg(c.props.peak_pct) },
-          },
-          {
-            label: 'MIC vs RT',
-            xAxis: { key: 'rt',  label: 'RT (min)',            getValue: c => getPropAvg(c.props.rt)            },
-            yAxis: { key: 'mic', label: 'MIC S. aureus (µM)', getValue: c => getPropAvg(c.props.mic), log: true },
-          },
-          {
-            label: 'Conversion vs RT',
-            xAxis: { key: 'rt',       label: 'RT (min)',       getValue: c => getPropAvg(c.props.rt)       },
-            yAxis: { key: 'peak_pct', label: 'Conversion (%)', getValue: c => getPropAvg(c.props.peak_pct) },
-          },
+        scatterAxes: [
+          { key: 'mic',      label: 'MIC S. aureus (µM)', getValue: c => getPropAvg(c.props.mic),      log: true  },
+          { key: 'tox_avg',  label: 'HEK293T growth (%)', getValue: c => getPropAvg(c.props.tox_avg),  log: false },
+          { key: 'sdr',      label: 'Selectivity (SDR)',  getValue: c => getPropAvg(c.props.sdr),      log: false },
+          { key: 'peak_pct', label: 'Conversion (%)',     getValue: c => getPropAvg(c.props.peak_pct), log: false },
+          { key: 'rt',       label: 'RT (min)',           getValue: c => getPropAvg(c.props.rt),       log: false },
         ],
+        scatterDefaultX: 'mic',
+        scatterDefaultY: 'tox_avg',
       },
       {
         id: 'tzlib-pa',
@@ -188,28 +155,15 @@ const LIBRARY_CONFIGS = {
             getValue: c => getPropAvg(c.props.sdr),
           },
         ],
-        scatterModes: [
-          {
-            label: 'MIC vs HEK293T',
-            xAxis: { key: 'mic',     label: 'MIC S. aureus (µM)', getValue: c => getPropAvg(c.props.mic),     log: true  },
-            yAxis: { key: 'tox_avg', label: 'HEK293T growth (%)', getValue: c => getPropAvg(c.props.tox_avg), log: false },
-          },
-          {
-            label: 'Selectivity vs Conversion',
-            xAxis: { key: 'sdr',      label: 'Selectivity (SDR)', getValue: c => getPropAvg(c.props.sdr)      },
-            yAxis: { key: 'peak_pct', label: 'Conversion (%)',    getValue: c => getPropAvg(c.props.peak_pct) },
-          },
-          {
-            label: 'MIC vs RT',
-            xAxis: { key: 'rt',  label: 'RT (min)',            getValue: c => getPropAvg(c.props.rt)            },
-            yAxis: { key: 'mic', label: 'MIC S. aureus (µM)', getValue: c => getPropAvg(c.props.mic), log: true },
-          },
-          {
-            label: 'Conversion vs RT',
-            xAxis: { key: 'rt',       label: 'RT (min)',       getValue: c => getPropAvg(c.props.rt)       },
-            yAxis: { key: 'peak_pct', label: 'Conversion (%)', getValue: c => getPropAvg(c.props.peak_pct) },
-          },
+        scatterAxes: [
+          { key: 'mic',      label: 'MIC S. aureus (µM)', getValue: c => getPropAvg(c.props.mic),      log: true  },
+          { key: 'tox_avg',  label: 'HEK293T growth (%)', getValue: c => getPropAvg(c.props.tox_avg),  log: false },
+          { key: 'sdr',      label: 'Selectivity (SDR)',  getValue: c => getPropAvg(c.props.sdr),      log: false },
+          { key: 'peak_pct', label: 'Conversion (%)',     getValue: c => getPropAvg(c.props.peak_pct), log: false },
+          { key: 'rt',       label: 'RT (min)',           getValue: c => getPropAvg(c.props.rt),       log: false },
         ],
+        scatterDefaultX: 'mic',
+        scatterDefaultY: 'tox_avg',
       },
     ],
   },
@@ -235,7 +189,6 @@ export function adaptLibrary(library) {
         .filter(gridCfg.compoundFilter)
         .map(c => ({ ...c, _row: c.blocks[gridCfg.rowPosition], _col: c.blocks[gridCfg.colPosition], _facet: c.blocks[gridCfg.facetPosition] }))
 
-      // Extract sorted unique codes
       let rowCodes = [...new Set(compounds.map(c => c._row))].filter(Boolean).sort(naturalSort)
       let colCodes = [...new Set(compounds.map(c => c._col))].filter(Boolean).sort(naturalSort)
       let facetCodes = [...new Set(compounds.map(c => c._facet))].filter(Boolean).sort(naturalSort)

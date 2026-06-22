@@ -38,9 +38,19 @@ function niceLogTicks(min, max) {
 export default function SelectivityScatter({ library }) {
   const adapted = useMemo(() => adaptLibrary(library), [library])
   const [seriesIdx, setSeriesIdx] = useState(0)
-  const [modeIdx, setModeIdx] = useState(0)
-  const [tooltip, setTooltip] = useState(null) // { compound, clientX, clientY }
+  const [tooltip, setTooltip] = useState(null)
   const tooltipRef = useRef(null)
+
+  const grid = adapted?.grids[seriesIdx]
+  const [xKey, setXKey] = useState(() => grid?.scatterDefaultX)
+  const [yKey, setYKey] = useState(() => grid?.scatterDefaultY)
+
+  // Reset axes when series changes
+  useEffect(() => {
+    if (!grid) return
+    setXKey(grid.scatterDefaultX)
+    setYKey(grid.scatterDefaultY)
+  }, [seriesIdx])
 
   useEffect(() => {
     if (!tooltipRef.current || !tooltip) return
@@ -56,20 +66,19 @@ export default function SelectivityScatter({ library }) {
     el.style.top  = top  + 'px'
   })
 
-  if (!adapted) return null
-  const grid = adapted.grids[seriesIdx]
-  const compounds = grid.compounds
-  const modes = grid.scatterModes
-  const safeIdx = Math.min(modeIdx, modes.length - 1)
-  const { xAxis, yAxis } = modes[safeIdx]
+  if (!adapted || !grid) return null
+
+  const axes = grid.scatterAxes
+  const xAxis = axes.find(a => a.key === xKey) ?? axes[0]
+  const yAxis = axes.find(a => a.key === yKey) ?? axes[1]
 
   const points = useMemo(() => {
-    return compounds.map(c => {
+    return grid.compounds.map(c => {
       const x = xAxis.getValue(c)
       const y = yAxis.getValue(c)
       return { compound: c, x, y }
     }).filter(p => p.x !== null && p.y !== null && isFinite(p.x) && isFinite(p.y))
-  }, [compounds, xAxis, yAxis])
+  }, [grid.compounds, xAxis, yAxis])
 
   const xs = points.map(p => p.x)
   const ys = points.map(p => p.y)
@@ -94,33 +103,34 @@ export default function SelectivityScatter({ library }) {
   const xTicks = xAxis.log ? niceLogTicks(xd0, xd1) : niceTicks(xd0, xd1, TICKS)
   const yTicks = yAxis.log ? niceLogTicks(yd0, yd1) : niceTicks(yd0, yd1, TICKS)
 
-  const facetType = adapted.facetType
-
   return (
     <div className="scatter-root">
       {/* Series selector */}
       {adapted.grids.length > 1 && (
-        <div className="series-tabs" style={{ marginBottom: 8 }}>
+        <div className="series-tabs">
           {adapted.grids.map((g, i) => (
             <button key={g.id} className={`series-tab${i === seriesIdx ? ' active' : ''}`}
-              onClick={() => { setSeriesIdx(i); setModeIdx(0) }}>
+              onClick={() => setSeriesIdx(i)}>
               {g.seriesLabel ?? g.id}
             </button>
           ))}
         </div>
       )}
 
-      {/* Mode tabs */}
-      <div className="scatter-mode-tabs">
-        {modes.map((m, i) => (
-          <button
-            key={i}
-            className={`scatter-mode-tab${i === safeIdx ? ' active' : ''}`}
-            onClick={() => setModeIdx(i)}
-          >
-            {m.label}
-          </button>
-        ))}
+      {/* Axis selectors */}
+      <div className="scatter-axis-selectors">
+        <label className="scatter-axis-label-select">
+          <span>X axis</span>
+          <select value={xKey} onChange={e => setXKey(e.target.value)}>
+            {axes.map(a => <option key={a.key} value={a.key}>{a.label}</option>)}
+          </select>
+        </label>
+        <label className="scatter-axis-label-select">
+          <span>Y axis</span>
+          <select value={yKey} onChange={e => setYKey(e.target.value)}>
+            {axes.map(a => <option key={a.key} value={a.key}>{a.label}</option>)}
+          </select>
+        </label>
       </div>
 
       {/* SVG scatter */}
@@ -131,7 +141,6 @@ export default function SelectivityScatter({ library }) {
         viewBox={`0 0 ${W} ${H}`}
       >
         <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
-          {/* Grid lines */}
           {yTicks.map(t => (
             <line key={t} x1={0} x2={INNER_W} y1={scY(t)} y2={scY(t)} stroke="#E3E8EA" strokeWidth={0.8} />
           ))}
@@ -139,11 +148,9 @@ export default function SelectivityScatter({ library }) {
             <line key={t} x1={scX(t)} x2={scX(t)} y1={0} y2={INNER_H} stroke="#E3E8EA" strokeWidth={0.8} />
           ))}
 
-          {/* Axes */}
           <line x1={0} x2={INNER_W} y1={INNER_H} y2={INNER_H} stroke="#9EADB5" strokeWidth={1} />
           <line x1={0} x2={0} y1={0} y2={INNER_H} stroke="#9EADB5" strokeWidth={1} />
 
-          {/* X ticks */}
           {xTicks.map(t => (
             <g key={t} transform={`translate(${scX(t)},${INNER_H})`}>
               <line y2={4} stroke="#9EADB5" />
@@ -153,7 +160,6 @@ export default function SelectivityScatter({ library }) {
             </g>
           ))}
 
-          {/* Y ticks */}
           {yTicks.map(t => (
             <g key={t} transform={`translate(0,${scY(t)})`}>
               <line x2={-4} stroke="#9EADB5" />
@@ -163,23 +169,17 @@ export default function SelectivityScatter({ library }) {
             </g>
           ))}
 
-          {/* Axis labels */}
-          <text
-            className="scatter-axis-label"
-            x={INNER_W / 2} y={INNER_H + 44}
-            textAnchor="middle"
-          >
+          <text className="scatter-axis-label-svg" x={INNER_W / 2} y={INNER_H + 44} textAnchor="middle">
             {xAxis.label}
           </text>
           <text
-            className="scatter-axis-label"
+            className="scatter-axis-label-svg"
             transform={`translate(-46,${INNER_H / 2}) rotate(-90)`}
             textAnchor="middle"
           >
             {yAxis.label}
           </text>
 
-          {/* Points */}
           {points.map(({ compound, x, y }) => {
             const cx = scX(x)
             const cy = scY(y)
@@ -191,7 +191,7 @@ export default function SelectivityScatter({ library }) {
                 cx={cx}
                 cy={cy}
                 r={4}
-                fill={getFacetColor(compound._facet, facetType)}
+                fill={getFacetColor(compound._facet, adapted.facetType)}
                 fillOpacity={0.8}
                 stroke="#fff"
                 strokeWidth={0.8}
@@ -204,7 +204,6 @@ export default function SelectivityScatter({ library }) {
         </g>
       </svg>
 
-      {/* Tooltip */}
       {tooltip && (
         <div ref={tooltipRef} className="scatter-tooltip">
           <div className="scatter-tooltip-id">{tooltip.compound.id}</div>
