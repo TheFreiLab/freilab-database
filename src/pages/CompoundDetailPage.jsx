@@ -158,11 +158,29 @@ export default function CompoundDetailPage() {
                 <table className="props-table">
                   <tbody>
                     {props.map(p => <PropRow key={p.key} prop={p} value={compound.props[p.key]} />)}
-                    {grouped.replicate.map(p => <PropRow key={p.key} prop={p} value={compound.props[p.key]} />)}
+                    {grouped.replicate
+                      .filter(p => (p.group ?? 'Other') === groupName)
+                      .map(p => <PropRow key={p.key} prop={p} value={compound.props[p.key]} />)}
                   </tbody>
                 </table>
               </div>
             ))}
+
+            {/* Replicates whose group doesn't match any primary group */}
+            {(() => {
+              const primaryGroups = new Set(Object.keys(grouped.primary))
+              const orphanReplicates = grouped.replicate.filter(p => !primaryGroups.has(p.group ?? 'Other'))
+              return orphanReplicates.length > 0 && (
+                <div className="props-group">
+                  <h3>Replicates</h3>
+                  <table className="props-table">
+                    <tbody>
+                      {orphanReplicates.map(p => <PropRow key={p.key} prop={p} value={compound.props[p.key]} />)}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            })()}
 
             {grouped.derived.length > 0 && (
               <div className="props-group">
