@@ -193,6 +193,7 @@ def process_library(lib_path):
 def process_combined(data_dir):
     lib_dir = Path(data_dir) / "libraries"
     feats, records = [], []
+    building_blocks = {}  # lib_id -> position -> code -> {svg, name}
 
     for p in sorted(lib_dir.glob("*.json")):
         with open(p, encoding="utf-8") as f:
@@ -205,11 +206,16 @@ def process_combined(data_dir):
                      for pos, bbs in lib['building_blocks'].items()}
         print(f"  {lib['id']}: {len(lib['compounds'])} compounds")
 
+        building_blocks[lib['id']] = {
+            pos: {bb['code']: {"svg": bb['svg'], "name": bb['name']} for bb in bbs}
+            for pos, bbs in lib['building_blocks'].items()
+        }
+
         for c in lib['compounds']:
             fp, metal = fingerprint_for_compound(lib['id'], c, bb_smiles)
             feats.append(fp)
 
-            record = {"id": c["id"], "lib": lib["id"], "metal": metal}
+            record = {"id": c["id"], "lib": lib["id"], "metal": metal, "blocks": c["blocks"]}
             for canon_key, per_lib_key in CANONICAL_PROPERTIES.items():
                 src_key = per_lib_key.get(lib["id"])
                 record[canon_key] = get_prop_avg(c["props"].get(src_key)) if src_key else None
@@ -242,7 +248,8 @@ def process_combined(data_dir):
 
     out_path = Path(data_dir) / "combined_umap.json"
     with open(out_path, "w", encoding="utf-8") as f:
-        json.dump(records, f, ensure_ascii=False, separators=(",", ":"))
+        json.dump({"compounds": records, "buildingBlocks": building_blocks}, f,
+                   ensure_ascii=False, separators=(",", ":"))
     print(f"  Wrote {out_path}  ({out_path.stat().st_size // 1024} KB)")
 
 

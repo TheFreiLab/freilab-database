@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { getMetricColor, PALETTE } from '../theme/palette'
+import '../components/LibraryGrid/LibraryGrid.css'
 import './ExploreAllPage.css'
 
 const MARGIN = { top: 20, right: 20, bottom: 54, left: 58 }
@@ -52,8 +53,18 @@ function computeRange(records, key) {
   return min === Infinity ? { min: 0, max: 1 } : { min, max }
 }
 
+function getTooltipSvgs(rec, buildingBlocks) {
+  const bbByPosition = buildingBlocks[rec.lib]
+  return Object.entries(rec.blocks ?? {})
+    .filter(([, code]) => code)
+    .flatMap(([pos, code]) => {
+      const bb = bbByPosition?.[pos]?.[code]
+      return bb?.svg ? [{ pos, code, svg: bb.svg, name: bb.name ?? code }] : []
+    })
+}
+
 export default function ExploreAllPage() {
-  const [records, setRecords] = useState(null)
+  const [data, setData]       = useState(null)
   const [error, setError]     = useState(null)
   const [colorKey, setColorKey] = useState('lib')
   const [pinned, setPinned]   = useState(null)
@@ -63,9 +74,11 @@ export default function ExploreAllPage() {
   useEffect(() => {
     fetch('/data/combined_umap.json')
       .then(r => { if (!r.ok) throw new Error(r.statusText); return r.json() })
-      .then(setRecords)
+      .then(setData)
       .catch(e => setError(e.message))
   }, [])
+
+  const records = data?.compounds
 
   useEffect(() => {
     if (!tooltipRef.current || !tooltip) return
@@ -201,6 +214,19 @@ export default function ExploreAllPage() {
                       ? tooltip.rec[colorOpt.key].toFixed(2) : '—'}
                   </div>
                 )}
+                {(() => {
+                  const svgs = getTooltipSvgs(tooltip.rec, data.buildingBlocks)
+                  return svgs.length > 0 && (
+                    <div className="grid-tooltip-bbs">
+                      {svgs.map(({ pos, code, svg, name }) => (
+                        <div key={pos} className="grid-tooltip-bb">
+                          <div className="bb-label">{pos}: {code}</div>
+                          <div className="bb-svg" dangerouslySetInnerHTML={{ __html: svg }} title={name} />
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })()}
               </div>
             )}
 
@@ -209,6 +235,19 @@ export default function ExploreAllPage() {
                 <button className="explore-pinned-close" onClick={() => setPinned(null)}>×</button>
                 <div className="explore-pinned-id">{pinned.id}</div>
                 <div className="explore-pinned-lib">{pinned.lib} · {pinned.metal ?? 'no metal'}</div>
+                {(() => {
+                  const svgs = getTooltipSvgs(pinned, data.buildingBlocks)
+                  return svgs.length > 0 && (
+                    <div className="grid-tooltip-bbs">
+                      {svgs.map(({ pos, code, svg, name }) => (
+                        <div key={pos} className="grid-tooltip-bb">
+                          <div className="bb-label">{pos}: {code}</div>
+                          <div className="bb-svg" dangerouslySetInnerHTML={{ __html: svg }} title={name} />
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })()}
                 <Link to={`/compound/${pinned.lib}/${pinned.id}`} className="explore-pinned-link">
                   View compound details →
                 </Link>
