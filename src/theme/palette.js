@@ -35,6 +35,9 @@ export const PALETTE = {
     tox:        ['#B85C1A', '#D88B4A', '#F0F0F0', '#6BAEC8', '#2E6F8E'],
     // Selectivity ratio / SDR: diverging orange↔teal, higher = more selective = teal
     selectivity:['#B85C1A', '#D88B4A', '#F0F0F0', '#6BAEC8', '#2E6F8E'],
+    // Generic sequential ramp for properties with no inherent "good/bad" direction
+    // (ligand descriptors, UMAP coordinates, RT, etc.)
+    default:    ['#F2F0F7', '#CBC9E2', '#9E9AC8', '#756BB1', '#42397C'],
   },
 
   // ── Chrome ─────────────────────────────────────────────────────────────────

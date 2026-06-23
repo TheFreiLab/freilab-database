@@ -64,6 +64,30 @@
   border-color: #0C4E60;
 }
 
+/* ── Colour legend ── */
+.scatter-color-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 0.78rem;
+  color: #4B5563;
+}
+.legend-gradient {
+  width: 120px;
+  height: 10px;
+  border-radius: 3px;
+  border: 1px solid #D1D8DC;
+}
+.legend-val {
+  font-weight: 600;
+  color: #1F2A2E;
+  font-size: 0.75rem;
+}
+.legend-label {
+  color: #6B7A80;
+}
+
 /* ── SVG ── */
 .scatter-svg-wrap {
   overflow: visible;

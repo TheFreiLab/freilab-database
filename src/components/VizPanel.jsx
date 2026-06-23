@@ -250,10 +250,12 @@ export default function VizPanel({ library }) {
       <div className="viz-inner-tabs">
         <button className={tab === 'grid'      ? 'active' : ''} onClick={() => setTab('grid')}>Grid</button>
         <button className={tab === 'scatter'   ? 'active' : ''} onClick={() => setTab('scatter')}>Scatter</button>
+        <button className={tab === 'chemspace' ? 'active' : ''} onClick={() => setTab('chemspace')}>Chemical space</button>
         <button className={tab === 'histogram' ? 'active' : ''} onClick={() => setTab('histogram')}>Histogram</button>
       </div>
       {tab === 'grid'      && <LibraryGrid       library={library} />}
       {tab === 'scatter'   && <SelectivityScatter library={library} />}
+      {tab === 'chemspace' && <SelectivityScatter library={library} mode="umap" />}
       {tab === 'histogram' && <HistogramView      library={library} />}
     </div>
   )

@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
-import { adaptLibrary } from '../../data/vizAdapter'
-import { getFacetColor } from '../../theme/palette'
+import { adaptLibrary, computeRange } from '../../data/vizAdapter'
+import { getFacetColor, getMetricColor, PALETTE } from '../../theme/palette'
 import PinnedCard from '../LibraryGrid/PinnedCard'
 import '../LibraryGrid/LibraryGrid.css'
 import './SelectivityScatter.css'
@@ -46,23 +46,48 @@ function getTooltipSvgs(compound, bbByPosition) {
     })
 }
 
-export default function SelectivityScatter({ library }) {
+// Build the "colour by" options for chemical-space mode: every scatter axis
+// (properties + ligand descriptors), enriched with the colour scale already
+// curated for that property in the grid metrics (role/reverse/log), falling
+// back to a neutral sequential ramp for axes with no curated metric (e.g.
+// ligand descriptors).
+function buildColorableAxes(grid) {
+  return grid.scatterAxes.map(axis => {
+    const metric = grid.allMetrics.find(m => m.key === axis.key)
+    return {
+      key: axis.key,
+      label: axis.label,
+      getValue: axis.getValue,
+      scale: metric?.scale ?? 'default',
+      reverse: metric?.reverse ?? false,
+      log: metric?.log ?? axis.log,
+    }
+  })
+}
+
+export default function SelectivityScatter({ library, mode = 'free' }) {
   const adapted = useMemo(() => adaptLibrary(library), [library])
   const [seriesIdx, setSeriesIdx] = useState(0)
   const [pinned, setPinned] = useState(null)
   const [tooltip, setTooltip] = useState(null)
+  const [colorKey, setColorKey] = useState('facet')
   const tooltipRef = useRef(null)
 
   const grid = adapted?.grids[seriesIdx]
-  const [xKey, setXKey] = useState(() => grid?.scatterDefaultX)
-  const [yKey, setYKey] = useState(() => grid?.scatterDefaultY)
+  const [xKey, setXKey] = useState(() => mode === 'umap' ? 'umap_x' : grid?.scatterDefaultX)
+  const [yKey, setYKey] = useState(() => mode === 'umap' ? 'umap_y' : grid?.scatterDefaultY)
 
   useEffect(() => {
     if (!grid) return
-    setXKey(grid.scatterDefaultX)
-    setYKey(grid.scatterDefaultY)
+    if (mode === 'umap') {
+      setXKey('umap_x')
+      setYKey('umap_y')
+    } else {
+      setXKey(grid.scatterDefaultX)
+      setYKey(grid.scatterDefaultY)
+    }
     setPinned(null)
-  }, [seriesIdx])
+  }, [seriesIdx, mode, grid])
 
   useEffect(() => {
     if (!tooltipRef.current || !tooltip) return
@@ -80,9 +105,22 @@ export default function SelectivityScatter({ library }) {
 
   if (!adapted || !grid) return null
 
-  const axes = grid.scatterAxes
+  const axes = mode === 'umap' ? grid.umapAxes : grid.scatterAxes
   const xAxis = axes.find(a => a.key === xKey) ?? axes[0]
   const yAxis = axes.find(a => a.key === yKey) ?? axes[1]
+
+  const colorableAxes = mode === 'umap' ? buildColorableAxes(grid) : null
+  const colorAxis = colorableAxes?.find(a => a.key === colorKey) ?? null
+  const colorRange = colorAxis ? computeRange(grid.compounds, colorAxis) : null
+
+  function colorOf(compound) {
+    if (!colorAxis) return getFacetColor(compound._facet, adapted.facetType)
+    const v = colorAxis.getValue(compound)
+    if (v === null || v === undefined || !isFinite(v)) return PALETTE.missing
+    return getMetricColor(v, colorRange.min, colorRange.max, colorAxis.scale, {
+      reverse: colorAxis.reverse, log: colorAxis.log,
+    })
+  }
 
   const points = useMemo(() => {
     return grid.compounds.map(c => {
@@ -115,6 +153,11 @@ export default function SelectivityScatter({ library }) {
   const xTicks = xAxis.log ? niceLogTicks(xd0, xd1) : niceTicks(xd0, xd1, TICKS)
   const yTicks = yAxis.log ? niceLogTicks(yd0, yd1) : niceTicks(yd0, yd1, TICKS)
 
+  const legendStops = colorAxis ? PALETTE.scales[colorAxis.scale] ?? PALETTE.scales.default : null
+  const [legendLeftVal, legendRightVal] = colorAxis?.reverse
+    ? [colorRange.max, colorRange.min]
+    : [colorRange?.min, colorRange?.max]
+
   return (
     <div className="scatter-root">
       {/* Series selector */}
@@ -129,21 +172,43 @@ export default function SelectivityScatter({ library }) {
         </div>
       )}
 
-      {/* Axis selectors */}
+      {/* Axis / colour selectors */}
       <div className="scatter-axis-selectors">
-        <label className="scatter-axis-label-select">
-          <span>X axis</span>
-          <select value={xKey} onChange={e => setXKey(e.target.value)}>
-            {axes.map(a => <option key={a.key} value={a.key}>{a.label}</option>)}
-          </select>
-        </label>
-        <label className="scatter-axis-label-select">
-          <span>Y axis</span>
-          <select value={yKey} onChange={e => setYKey(e.target.value)}>
-            {axes.map(a => <option key={a.key} value={a.key}>{a.label}</option>)}
-          </select>
-        </label>
+        {mode === 'umap' ? (
+          <label className="scatter-axis-label-select">
+            <span>Colour by</span>
+            <select value={colorKey} onChange={e => setColorKey(e.target.value)}>
+              <option value="facet">{grid.facetPosition}</option>
+              {colorableAxes.map(a => <option key={a.key} value={a.key}>{a.label}</option>)}
+            </select>
+          </label>
+        ) : (
+          <>
+            <label className="scatter-axis-label-select">
+              <span>X axis</span>
+              <select value={xKey} onChange={e => setXKey(e.target.value)}>
+                {axes.map(a => <option key={a.key} value={a.key}>{a.label}</option>)}
+              </select>
+            </label>
+            <label className="scatter-axis-label-select">
+              <span>Y axis</span>
+              <select value={yKey} onChange={e => setYKey(e.target.value)}>
+                {axes.map(a => <option key={a.key} value={a.key}>{a.label}</option>)}
+              </select>
+            </label>
+          </>
+        )}
       </div>
+
+      {/* Colour legend (chemical-space mode, continuous properties only) */}
+      {colorAxis && (
+        <div className="scatter-color-legend">
+          <span className="legend-val">{legendLeftVal?.toFixed(2)}</span>
+          <div className="legend-gradient" style={{ background: `linear-gradient(to right, ${legendStops.join(',')})` }} />
+          <span className="legend-val">{legendRightVal?.toFixed(2)}</span>
+          <span className="legend-label">{colorAxis.label}</span>
+        </div>
+      )}
 
       {/* SVG scatter */}
       <svg
@@ -204,7 +269,7 @@ export default function SelectivityScatter({ library }) {
                 cx={cx}
                 cy={cy}
                 r={isPinned ? 6 : 4}
-                fill={getFacetColor(compound._facet, adapted.facetType)}
+                fill={colorOf(compound)}
                 fillOpacity={isPinned ? 1 : 0.8}
                 stroke={isPinned ? '#0C4E60' : '#fff'}
                 strokeWidth={isPinned ? 1.5 : 0.8}
@@ -230,6 +295,12 @@ export default function SelectivityScatter({ library }) {
             <span className="metric-label">{yAxis.label}</span>
             <span className="metric-val">{yAxis.getValue(tooltip.compound)?.toFixed(2) ?? '—'}</span>
           </div>
+          {colorAxis && (
+            <div className="grid-tooltip-metric">
+              <span className="metric-label">{colorAxis.label}</span>
+              <span className="metric-val">{colorAxis.getValue(tooltip.compound)?.toFixed(2) ?? '—'}</span>
+            </div>
+          )}
           {(() => {
             const svgs = getTooltipSvgs(tooltip.compound, grid.bbByPosition)
             return svgs.length > 0 && (
