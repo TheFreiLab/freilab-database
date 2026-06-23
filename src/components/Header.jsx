@@ -11,6 +11,7 @@ export default function Header() {
         </Link>
         <ul className="nav-links">
           <li><NavLink to="/" end>Libraries</NavLink></li>
+          <li><NavLink to="/explore">Chemical Space</NavLink></li>
           <li>
             <a href="https://www.thefreilab.com" target="_blank" rel="noreferrer">
               Lab Website ↗

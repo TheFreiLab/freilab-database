@@ -1,0 +1,97 @@
+.explore-page { flex: 1; padding: 2.5rem 1.5rem; }
+
+.explore-scatter-root { position: relative; }
+
+.explore-color-select {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: #4B5563;
+  margin-bottom: 12px;
+}
+.explore-color-select span { font-weight: 600; color: #1F2A2E; }
+.explore-color-select select {
+  padding: 4px 24px 4px 8px;
+  border: 1px solid #C8CDD0;
+  border-radius: 4px;
+  background: #fff;
+  font-size: 0.82rem;
+  color: #1F2A2E;
+  cursor: pointer;
+}
+
+.explore-legend-categorical {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 12px;
+  font-size: 0.8rem;
+  color: #4B5563;
+}
+.legend-chip { display: flex; align-items: center; gap: 5px; }
+.legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+.explore-legend-continuous {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 0.78rem;
+  color: #4B5563;
+}
+.legend-gradient {
+  width: 120px;
+  height: 10px;
+  border-radius: 3px;
+  border: 1px solid #D1D8DC;
+}
+.legend-val { font-weight: 600; color: #1F2A2E; font-size: 0.75rem; }
+.legend-label { color: #6B7A80; }
+
+.explore-svg-wrap { overflow: visible; }
+.explore-dot { cursor: pointer; transition: r 0.08s; }
+.explore-dot:hover { r: 6px; }
+.explore-axis-label { font-size: 11px; fill: #6B7A80; }
+.explore-tick-label { font-size: 9px; fill: #6B7A80; }
+
+.explore-tooltip {
+  position: fixed;
+  pointer-events: none;
+  z-index: 900;
+  background: #fff;
+  border: 1px solid #D1D8DC;
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.11);
+  padding: 7px 10px;
+  font-size: 0.78rem;
+  min-width: 140px;
+}
+.explore-tooltip-id { font-weight: 700; margin-bottom: 3px; color: #1F2A2E; }
+.explore-tooltip-row { color: #4B5563; display: flex; justify-content: space-between; gap: 10px; }
+.explore-tooltip-row span:first-child { font-weight: 600; color: #1F2A2E; }
+
+.explore-pinned-card {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  background: #fff;
+  border: 1px solid #D1D8DC;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+  padding: 14px 16px;
+  min-width: 200px;
+}
+.explore-pinned-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  border: none;
+  background: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: #6B7A80;
+}
+.explore-pinned-id { font-weight: 700; color: #1F2A2E; margin-bottom: 2px; }
+.explore-pinned-lib { font-size: 0.82rem; color: #6B7A80; margin-bottom: 10px; }
+.explore-pinned-link { font-size: 0.85rem; color: var(--primary); font-weight: 500; }

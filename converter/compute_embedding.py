@@ -29,6 +29,12 @@ the vector instead of a token categorical flag.
 Run AFTER convert.py (operates in place on the JSON files):
     python compute_embedding.py ../public/data
     python compute_embedding.py ../public/data --library-id TzLib
+
+Cross-library mode fits ONE UMAP across every compound in every library (so
+distances are meaningful across library boundaries, not three independent
+layouts), writing public/data/combined_umap.json instead of touching the
+per-library JSONs:
+    python compute_embedding.py ../public/data --combined
 """
 
 import sys
@@ -111,6 +117,39 @@ def electrum_fingerprint(ligand_smiles, metal, radius, n_bits):
     return np.append(ligand_fp, metal_vec)
 
 
+def fingerprint_for_compound(lib_id, compound, bb_smiles):
+    spec = LIBRARY_SPECS[lib_id]
+    blocks = compound['blocks']
+    ligand_smiles = '.'.join(bb_smiles[pos][blocks[pos]] for pos in spec['ligand_positions'])
+    metal = spec['metal_for'](blocks)
+    return electrum_fingerprint(ligand_smiles, metal, RADIUS, N_BITS), metal
+
+
+def get_prop_avg(v):
+    """Same convention as the frontend's getPropAvg: v is None, a plain number,
+    or a {avg, reps} replicate object."""
+    if v is None:
+        return None
+    return v.get('avg') if isinstance(v, dict) else v
+
+
+# Properties that mean the same thing across libraries despite different key
+# names, so they're safe to colour by in the cross-library view. Antibacterial
+# activity is deliberately NOT unified here: IrCpSB/NOSB report it as OD at a
+# fixed dose (sa_50/sa_12/ec_50/ec_100) while TzLib reports literal MIC in µM
+# (mic/sdr) — different assay design and units, not just different key names,
+# so combining them on one colour scale would be comparing unlike quantities.
+CANONICAL_PROPERTIES = {
+    # All three libraries report this as % viability/growth at a fixed HEK293T exposure.
+    'hek_viability':  {'IrCpSB': 'hek_50',     'TzLib': 'tox_avg',   'NOSB': 'hek_50'},
+    # All three report HPLC conversion as a QC metric, same units.
+    'conversion_pct': {'IrCpSB': 'conversion', 'TzLib': 'peak_pct',  'NOSB': 'conversion'},
+}
+# Ligand descriptors (Stage 7a) already use identical keys/units in every
+# library's JSON — no mapping needed, just carry them through.
+LIGAND_DESCRIPTOR_KEYS = ['lig_mw', 'lig_tpsa', 'lig_logp', 'lig_hbd', 'lig_hba', 'lig_rotb', 'lig_arring']
+
+
 def process_library(lib_path):
     with open(lib_path, encoding="utf-8") as f:
         lib = json.load(f)
@@ -123,15 +162,7 @@ def process_library(lib_path):
     bb_smiles = {pos: {bb['code']: bb['smiles'] for bb in bbs}
                  for pos, bbs in lib['building_blocks'].items()}
 
-    feats = []
-    for c in lib['compounds']:
-        blocks = c['blocks']
-        ligand_smiles = '.'.join(
-            bb_smiles[pos][blocks[pos]] for pos in spec['ligand_positions']
-        )
-        metal = spec['metal_for'](blocks)
-        feats.append(electrum_fingerprint(ligand_smiles, metal, RADIUS, N_BITS))
-
+    feats = [fingerprint_for_compound(lib['id'], c, bb_smiles)[0] for c in lib['compounds']]
     X = np.vstack(feats)
     print(f"  {lib['id']}: {X.shape[0]} compounds x {X.shape[1]} ELECTRUM features")
 
@@ -159,15 +190,80 @@ def process_library(lib_path):
     print(f"  Wrote {lib_path}  ({lib_path.stat().st_size // 1024} KB)")
 
 
+def process_combined(data_dir):
+    lib_dir = Path(data_dir) / "libraries"
+    feats, records = [], []
+
+    for p in sorted(lib_dir.glob("*.json")):
+        with open(p, encoding="utf-8") as f:
+            lib = json.load(f)
+        if lib['id'] not in LIBRARY_SPECS:
+            print(f"  No ELECTRUM spec for library '{lib['id']}', skipping.")
+            continue
+
+        bb_smiles = {pos: {bb['code']: bb['smiles'] for bb in bbs}
+                     for pos, bbs in lib['building_blocks'].items()}
+        print(f"  {lib['id']}: {len(lib['compounds'])} compounds")
+
+        for c in lib['compounds']:
+            fp, metal = fingerprint_for_compound(lib['id'], c, bb_smiles)
+            feats.append(fp)
+
+            record = {"id": c["id"], "lib": lib["id"], "metal": metal}
+            for canon_key, per_lib_key in CANONICAL_PROPERTIES.items():
+                src_key = per_lib_key.get(lib["id"])
+                record[canon_key] = get_prop_avg(c["props"].get(src_key)) if src_key else None
+            for key in LIGAND_DESCRIPTOR_KEYS:
+                record[key] = c["props"].get(key)
+            records.append(record)
+
+    X = np.vstack(feats)
+    print(f"  Combined: {X.shape[0]} compounds x {X.shape[1]} ELECTRUM features")
+
+    import umap
+    n_neighbors = min(15, max(2, X.shape[0] - 1))
+    reducer = umap.UMAP(
+        n_neighbors=n_neighbors,
+        min_dist=0.1,
+        metric="manhattan",
+        random_state=42,
+        n_components=2,
+    )
+    coords = reducer.fit_transform(X)
+
+    mins = coords.min(axis=0)
+    maxs = coords.max(axis=0)
+    span = np.where(maxs - mins == 0, 1, maxs - mins)
+    norm = (coords - mins) / span
+
+    for rec, xy in zip(records, norm):
+        rec["x"] = round(float(xy[0]), 4)
+        rec["y"] = round(float(xy[1]), 4)
+
+    out_path = Path(data_dir) / "combined_umap.json"
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(records, f, ensure_ascii=False, separators=(",", ":"))
+    print(f"  Wrote {out_path}  ({out_path.stat().st_size // 1024} KB)")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Compute ELECTRUM/UMAP embedding for library JSONs")
     parser.add_argument("data_dir", help="public/data directory (containing libraries/)")
     parser.add_argument("--library-id", default=None, help="Process only this library (default: all)")
+    parser.add_argument("--combined", action="store_true",
+                         help="Fit one UMAP across all libraries instead, writing combined_umap.json")
     args = parser.parse_args()
 
     lib_dir = Path(args.data_dir) / "libraries"
     if not lib_dir.is_dir():
         sys.exit(f"No libraries/ dir under {args.data_dir}")
+
+    if args.combined:
+        if args.library_id:
+            sys.exit("--combined and --library-id are mutually exclusive")
+        process_combined(args.data_dir)
+        print("Done.")
+        return
 
     paths = [lib_dir / f"{args.library_id}.json"] if args.library_id else sorted(lib_dir.glob("*.json"))
     for p in paths:

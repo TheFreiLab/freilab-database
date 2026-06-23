@@ -25,6 +25,22 @@ export const PALETTE = {
     Cp4: '#E69F00',
   },
 
+  // ── Categorical: libraries (cross-library explorer) ───────────────────────
+  library: {
+    IrCpSB: '#0072B2',
+    TzLib:  '#D55E00',
+    NOSB:   '#009E73',
+  },
+
+  // ── Categorical: metal identity (cross-library explorer) ──────────────────
+  metal: {
+    Ir:   '#E69F00',
+    Re:   '#CC79A7',
+    Mn:   '#009E73',
+    Ru:   '#000000',
+    null: '#56B4E9',  // metal-free (TzLib "Free_*" ligands)
+  },
+
   // ── Sequential / diverging scales (5-stop arrays, t ∈ [0,1]) ──────────────
   scales: {
     // Conversion %: teal ramp, higher = better
