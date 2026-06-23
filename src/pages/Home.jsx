@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import LibraryCard from '../components/LibraryCard'
 import './Home.css'
 
@@ -23,6 +24,14 @@ export default function Home() {
             combinatorial metal-complex libraries.
           </p>
         </div>
+
+        <Link to="/explore" className="explore-callout">
+          <div>
+            <strong>Explore chemical space across all libraries</strong>
+            <span>One combined UMAP of every compound, coloured by library, metal, or shared properties</span>
+          </div>
+          <span className="explore-callout-arrow">→</span>
+        </Link>
 
         {error && <p className="error-msg">Failed to load libraries: {error}</p>}
 
