@@ -6,7 +6,7 @@ function getPropAvg(v) {
   return typeof v === 'object' ? (v.avg ?? null) : v
 }
 
-function naturalSort(a, b) {
+export function naturalSort(a, b) {
   return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' })
 }
 
@@ -20,6 +20,14 @@ const LIGAND_DESCRIPTOR_AXES = [
   { key: 'lig_hba',    label: 'Σ Ligand HBA',          getValue: c => getPropAvg(c.props.lig_hba),    log: false },
   { key: 'lig_rotb',   label: 'Σ Ligand Rot. bonds',   getValue: c => getPropAvg(c.props.lig_rotb),   log: false },
   { key: 'lig_arring', label: 'Σ Ligand Arom. rings',  getValue: c => getPropAvg(c.props.lig_arring), log: false },
+]
+
+// Stage 7b — precomputed UMAP chemical-space embedding (compute_embedding.py).
+// Selecting both as X/Y axes turns the existing scatter into a 2D embedding view;
+// colour stays facet-based, which already reveals building-block clustering.
+const UMAP_AXES = [
+  { key: 'umap_x', label: 'UMAP 1', getValue: c => c.umap?.[0] ?? null, log: false },
+  { key: 'umap_y', label: 'UMAP 2', getValue: c => c.umap?.[1] ?? null, log: false },
 ]
 
 // ── Per-library grid configurations ──────────────────────────────────────────
@@ -82,6 +90,7 @@ const LIBRARY_CONFIGS = {
           { key: 'rt_target',  label: 'RT Target (min)',      getValue: c => getPropAvg(c.props.rt_target),  log: false },
           { key: 'rt_2plus',   label: 'RT 2+ (min)',          getValue: c => getPropAvg(c.props.rt_2plus),   log: false },
           ...LIGAND_DESCRIPTOR_AXES,
+          ...UMAP_AXES,
         ],
         scatterDefaultX: 'sa_50',
         scatterDefaultY: 'hek_50',
@@ -132,6 +141,7 @@ const LIBRARY_CONFIGS = {
           { key: 'peak_pct', label: 'Conversion (%)',     getValue: c => getPropAvg(c.props.peak_pct), log: false },
           { key: 'rt',       label: 'RT (min)',           getValue: c => getPropAvg(c.props.rt),       log: false },
           ...LIGAND_DESCRIPTOR_AXES,
+          ...UMAP_AXES,
         ],
         scatterDefaultX: 'mic',
         scatterDefaultY: 'tox_avg',
@@ -176,6 +186,7 @@ const LIBRARY_CONFIGS = {
           { key: 'peak_pct', label: 'Conversion (%)',     getValue: c => getPropAvg(c.props.peak_pct), log: false },
           { key: 'rt',       label: 'RT (min)',           getValue: c => getPropAvg(c.props.rt),       log: false },
           ...LIGAND_DESCRIPTOR_AXES,
+          ...UMAP_AXES,
         ],
         scatterDefaultX: 'mic',
         scatterDefaultY: 'tox_avg',
