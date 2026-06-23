@@ -194,6 +194,70 @@ const LIBRARY_CONFIGS = {
       },
     ],
   },
+
+  NOSB: {
+    facetType: 'scaffold',
+    grids: [
+      {
+        id: 'nosb',
+        seriesLabel: null,
+        facetPosition:  'Scaffold',
+        rowPosition:    'Amine',
+        colPosition:    'Aldehyde',
+        facetDisplay:   'selector',
+        compoundFilter: () => true,
+        rowFilter:      null,
+        colFilter:      null,
+        facetFilter:    null,
+        metrics: [
+          {
+            key: 'conversion', label: 'Conversion', unit: '%',
+            scale: 'conv', reverse: false, log: false,
+            getValue: c => getPropAvg(c.props.conversion),
+          },
+          {
+            key: 'sa_50', label: 'S. aureus 50µM', unit: 'OD',
+            scale: 'activity', reverse: true, log: false,
+            getValue: c => getPropAvg(c.props.sa_50),
+          },
+          {
+            key: 'sa_12', label: 'S. aureus 12.5µM', unit: 'OD',
+            scale: 'activity', reverse: true, log: false,
+            getValue: c => getPropAvg(c.props.sa_12),
+          },
+          {
+            key: 'ec_50', label: 'E. coli 50µM', unit: 'OD',
+            scale: 'activity', reverse: true, log: false,
+            getValue: c => getPropAvg(c.props.ec_50),
+          },
+          {
+            key: 'ec_100', label: 'E. coli 100µM', unit: 'OD',
+            scale: 'activity', reverse: true, log: false,
+            getValue: c => getPropAvg(c.props.ec_100),
+          },
+          {
+            key: 'hek_50', label: 'HEK293T', unit: '%',
+            scale: 'tox', reverse: false, log: false,
+            getValue: c => getPropAvg(c.props.hek_50),
+          },
+        ],
+        scatterAxes: [
+          { key: 'sa_50',      label: 'S. aureus 50µM (OD)',   getValue: c => getPropAvg(c.props.sa_50),      log: false },
+          { key: 'sa_12',      label: 'S. aureus 12.5µM (OD)', getValue: c => getPropAvg(c.props.sa_12),      log: false },
+          { key: 'ec_50',      label: 'E. coli 50µM (OD)',     getValue: c => getPropAvg(c.props.ec_50),      log: false },
+          { key: 'ec_100',     label: 'E. coli 100µM (OD)',    getValue: c => getPropAvg(c.props.ec_100),     log: false },
+          { key: 'hek_50',     label: 'HEK293T (%)',           getValue: c => getPropAvg(c.props.hek_50),     log: false },
+          { key: 'hek_sd',     label: 'HEK293T SD',            getValue: c => getPropAvg(c.props.hek_sd),     log: false },
+          { key: 'conversion', label: 'Conversion (%)',        getValue: c => getPropAvg(c.props.conversion), log: false },
+          { key: 'rt_target',  label: 'RT Target (min)',       getValue: c => getPropAvg(c.props.rt_target),  log: false },
+          ...LIGAND_DESCRIPTOR_AXES,
+        ],
+        umapAxes: UMAP_AXES,
+        scatterDefaultX: 'sa_50',
+        scatterDefaultY: 'hek_50',
+      },
+    ],
+  },
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────

@@ -64,6 +64,7 @@ TZLIB_SCAFFOLD_METAL = {
     'RuCy_Tz4P': 'Ru', 'RuCy_Tz1MP': 'Ru',
     'Free_Tz4P': None, 'Free_Tz1MP': None,
 }
+NOSB_SCAFFOLD_METAL = {'IrCp': 'Ir', 'RuCy': 'Ru'}
 LIBRARY_SPECS = {
     'IrCpSB': {
         'ligand_positions': ['Cp', 'Ald', 'Amine'],
@@ -72,6 +73,10 @@ LIBRARY_SPECS = {
     'TzLib': {
         'ligand_positions': ['Amine', 'Alkyne'],
         'metal_for': lambda blocks: TZLIB_SCAFFOLD_METAL[blocks['Scaffold']],
+    },
+    'NOSB': {
+        'ligand_positions': ['Scaffold', 'Aldehyde', 'Amine'],
+        'metal_for': lambda blocks: NOSB_SCAFFOLD_METAL[blocks['Scaffold']],
     },
 }
 

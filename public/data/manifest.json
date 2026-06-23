@@ -19,6 +19,16 @@
       "doi": "10.1038/s41467-025-67341-z",
       "compound_count": 864,
       "position_count": 3
+    },
+    {
+      "id": "NOSB",
+      "title": "N,O-Schiff Base Ru/Ir Library",
+      "description": "176 N,O-Schiff-base compounds from a combinatorial library across two half-sandwich metal scaffolds (Ir Cp*, Ru cymene), screened for antibacterial activity against S. aureus and E. coli, and cytotoxicity against HEK293T cells.",
+      "metal": "Ir / Ru",
+      "scaffold": "N,O-Schiff Base",
+      "doi": "10.26434/chemrxiv.15005024/v1",
+      "compound_count": 176,
+      "position_count": 3
     }
   ]
 }

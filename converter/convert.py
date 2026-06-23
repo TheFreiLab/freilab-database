@@ -8,6 +8,7 @@ Usage:
 Supported library IDs:
     IrCpSB    — Ir Cp Schiff-Base combinatorial library (single sheet)
     TzLib     — Metal-Triazole combinatorial library (multi-sheet)
+    NOSB      — N,O-Schiff Base Ru/Ir combinatorial library (multi-sheet)
 
 Writes:
     <output_dir>/manifest.json
@@ -53,6 +54,18 @@ LIBRARY_META = {
         "metal": "Ir / Re / Mn / Ru",
         "scaffold": "Triazole",
         "doi": "10.1038/s41467-025-67341-z",
+    },
+    "NOSB": {
+        "title": "N,O-Schiff Base Ru/Ir Library",
+        "description": (
+            "176 N,O-Schiff-base compounds from a combinatorial library across "
+            "two half-sandwich metal scaffolds (Ir Cp*, Ru cymene), screened for "
+            "antibacterial activity against S. aureus and E. coli, and "
+            "cytotoxicity against HEK293T cells."
+        ),
+        "metal": "Ir / Ru",
+        "scaffold": "N,O-Schiff Base",
+        "doi": "10.26434/chemrxiv.15005024/v1",
     },
 }
 
@@ -456,12 +469,172 @@ def convert_tzlib(wb, library_id):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# NOSB — N,O-Schiff Base Ru/Ir library (2 sheets, corrupted source SMILES columns)
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# The source workbook's Aldehyde SMILES column (both sheets) and Aromatic SMILES
+# column (RuCy sheet) have a ring-closure digit that increments with row position
+# instead of staying fixed, e.g. an aldehyde meant to be constant within a
+# lettered block reads "...C=C1", "...C=C2", "...C=C3" for amines 1, 2, 3 — only
+# the "...C=C1" form parses. Verified by amine/aldehyde cross-checking between
+# the IrCp and RuCy sheets (identical building blocks, only metal scaffold
+# differs) and by RDKit parse failures on every other row. The values below are
+# the one parseable row per block, taken directly from the workbook — not
+# independently sourced. IrCp's Aromatic SMILES is a separate, unrelated bug
+# (constant but invalid on its own — five ring positions instead of six);
+# corrected to Cp* (pentamethylcyclopentadiene) per lab convention (matches
+# IrCpSB's existing Cp ligand SMILES) since the source gave no parseable value
+# to recover at all.
+
+NOSB_ALDEHYDE_SMILES = {
+    "A": "O=CC1=C(O)C=CC=C1",
+    "B": "O=CC1=C(O)C(Br)=CC(Cl)=C1",
+    "C": "O=CC1=C(O)C(OC)=CC=C1Br",
+    "D": "O=CC1=C(O)C=C(N(CC)CC)C=C1",
+    "E": "O=CC1=C(O)C=C(OC)C=C1",
+    "F": "O=CC1=C(O)C=C(C)C=C1",
+    "G": "O=CC1=C(O)C=CC([N+]([O-])=O)=C1",
+    "H": "O=CC1=C(O)C=CC(Br)=C1",
+    "I": "O=CC1=C(O)C=CC(C)=C1",
+    "J": "O=CC1=C(O)C=CC2=C1C=CC=C2",
+    "K": "O=CC1=C(O)C(CCCN2CCC3)=C2C3=C1",
+}
+
+NOSB_PROPERTIES = [
+    {"key": "conversion", "label": "Conversion",         "unit": "%",   "role": "qc",       "group": None},
+    {"key": "rt_target",  "label": "RT (Target)",         "unit": "min", "role": "qc",       "group": None},
+    {"key": "sa_50",      "label": "S. aureus 50 µM",     "unit": "OD",  "role": "primary",  "group": "Antibacterial"},
+    {"key": "sa_12",      "label": "S. aureus 12.5 µM",   "unit": "OD",  "role": "primary",  "group": "Antibacterial"},
+    {"key": "ec_50",      "label": "E. coli 50 µM",       "unit": "OD",  "role": "primary",  "group": "Antibacterial"},
+    {"key": "ec_100",     "label": "E. coli 100 µM",      "unit": "OD",  "role": "primary",  "group": "Antibacterial"},
+    {"key": "hek_50",     "label": "HEK293T 50 µM",       "unit": "%",   "role": "primary",  "group": "Cytotoxicity"},
+    {"key": "hek_sd",     "label": "HEK293T SD",          "unit": "%",   "role": "replicate","group": "Cytotoxicity"},
+]
+
+# Each entry: which sheet, the metal scaffold it represents (code/label/SMILES,
+# hardcoded rather than read from the corrupted Aromatic SMILES column — see
+# note above), the compound-ID pattern, and a column map per property
+# (rep_cols + avg_col for {avg, reps} properties; a single col for hek_sd; None
+# for assays this sheet never ran).
+NOSB_SHEET_CONFIGS = [
+    # Column indices are 0-based (tuple position from ws.iter_rows(values_only=True),
+    # i.e. Excel column letter's 1-based position minus 1 — A=0, B=1, ... AA=26).
+    {
+        "sheet": "IrCp",
+        "scaffold_code": "IrCp", "scaffold_label": "Ir Cp*",
+        "scaffold_smiles": "CC1=C(C)C(C)=C(C)C1C",
+        "id_re": re.compile(r"^IrCP_HO-SB_([A-Za-z]+)(\d+)$"),
+        "cols": {
+            "conversion": 4, "rt_target": 5,
+            "sa_50":  ([7, 8, 9, 10],   11),
+            "sa_12":  ([13, 14, 15, 16], 17),
+            "ec_50":  (None, None),
+            "ec_100": ([19, 20, 21, 22], 23),
+            "hek_50": ([26, 27, 28, 29], 30),
+            "hek_sd": 31,
+        },
+    },
+    {
+        "sheet": "RuCy",
+        "scaffold_code": "RuCy", "scaffold_label": "Ru Cymene",
+        "scaffold_smiles": "CC1=CC=C(C(C)C)C=C1",
+        "id_re": re.compile(r"^RuCy_HO-SB_([A-Za-z]+)(\d+)$"),
+        "cols": {
+            "conversion": 4, "rt_target": 5,
+            "sa_50":  ([7, 8, 9, 10],   11),
+            "sa_12":  ([13, 14, 15, 16], 17),
+            "ec_50":  ([19, 20, 21, 22], 23),
+            "ec_100": ([25, 26, 27, 28], 29),
+            "hek_50": ([31, 32, 33, 34], 35),
+            "hek_sd": 36,
+        },
+    },
+]
+
+
+def convert_nosb(wb, library_id):
+    bb_map = {"Scaffold": {}, "Aldehyde": {}, "Amine": {}}
+    all_compounds = []
+
+    for cfg in NOSB_SHEET_CONFIGS:
+        ws = wb[cfg["sheet"]]
+        data_rows = [r for r in ws.iter_rows(values_only=True) if r[0] and str(r[0]).strip() != "Compounds"]
+        print(f"  Sheet '{cfg['sheet']}': {len(data_rows)} rows")
+
+        bb_map["Scaffold"][cfg["scaffold_smiles"]] = cfg["scaffold_code"]
+
+        cols = cfg["cols"]
+        skipped = 0
+        for row in data_rows:
+            cid = str(row[0]).strip()
+            m = cfg["id_re"].match(cid)
+            if not m:
+                print(f"    Warning: cannot parse '{cid}' with pattern {cfg['id_re'].pattern}")
+                skipped += 1
+                continue
+
+            ald_code, amine_code = m.group(1), m.group(2)
+            amine_smi = row[1]
+            ald_smi   = NOSB_ALDEHYDE_SMILES[ald_code]
+
+            if amine_smi and amine_code not in bb_map["Amine"]:
+                bb_map["Amine"][amine_smi] = amine_code
+            if ald_code not in bb_map["Aldehyde"]:
+                bb_map["Aldehyde"][ald_smi] = ald_code
+
+            props = {}
+            for key in ("conversion", "rt_target"):
+                props[key] = clean_val(row[cols[key]])
+            for key in ("sa_50", "sa_12", "ec_50", "ec_100", "hek_50"):
+                rep_cols, avg_col = cols[key]
+                if avg_col is None:
+                    props[key] = None
+                else:
+                    props[key] = {"avg": clean_val(row[avg_col]), "reps": [clean_val(row[i]) for i in rep_cols]}
+            props["hek_sd"] = clean_val(row[cols["hek_sd"]]) if cols["hek_sd"] is not None else None
+
+            all_compounds.append({
+                "id": cid,
+                "blocks": {
+                    "Scaffold": cfg["scaffold_code"],
+                    "Aldehyde": ald_code,
+                    "Amine":    amine_code,
+                },
+                "props": props,
+            })
+        if skipped:
+            print(f"  {skipped} rows skipped")
+
+    print("Generating SVGs ...")
+    building_blocks = render_building_blocks(bb_map)
+    print(f"  Scaffold: {len(building_blocks['Scaffold'])} | "
+          f"Aldehyde: {len(building_blocks['Aldehyde'])} | "
+          f"Amine: {len(building_blocks['Amine'])}")
+    print(f"  Total compounds: {len(all_compounds)}")
+
+    meta = LIBRARY_META[library_id]
+    return {
+        "id": library_id, "title": meta["title"], "description": meta["description"],
+        "metal": meta["metal"], "scaffold": meta["scaffold"], "doi": meta["doi"],
+        "positions": [
+            {"key": "Scaffold", "label": "Metal Scaffold"},
+            {"key": "Aldehyde", "label": "Aldehyde"},
+            {"key": "Amine",    "label": "Amine"},
+        ],
+        "properties":      NOSB_PROPERTIES,
+        "building_blocks": building_blocks,
+        "compounds":       all_compounds,
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # Entry point
 # ═══════════════════════════════════════════════════════════════════════════════
 
 CONVERTERS = {
     "IrCpSB": convert_ircpsb,
     "TzLib":  convert_tzlib,
+    "NOSB":   convert_nosb,
 }
 
 

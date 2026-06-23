@@ -13,6 +13,8 @@ export const PALETTE = {
     RuCy_Tz1MP:   '#9B4E7B',
     Free_Tz4P:    '#56B4E9',
     Free_Tz1MP:   '#2E90C5',
+    IrCp:         '#E69F00',
+    RuCy:         '#000000',
   },
 
   // ── Categorical: Cp cores ──────────────────────────────────────────────────
@@ -60,6 +62,8 @@ export const SCAFFOLD_LABELS = {
   RuCy_Tz1MP: 'RuCy (Tz1MP)',
   Free_Tz4P:  'Free Tz4P',
   Free_Tz1MP: 'Free Tz1MP',
+  IrCp:       'Ir Cp*',
+  RuCy:       'Ru Cymene',
 }
 
 export const CP_LABELS = {
