@@ -39,7 +39,7 @@ LIBRARY_META = {
         ),
         "metal": "Ir",
         "scaffold": "Cp Schiff-Base",
-        "doi": None,  # fill in before publishing
+        "doi": "10.26434/chemrxiv.15003837.v1",
     },
     "TzLib": {
         "title": "Metal-Triazole Combinatorial Library",
