@@ -6,7 +6,7 @@
       "description": "1,440 iridium Cp Schiff-base compounds from a combinatorial library screened for antibacterial activity against S. aureus and E. coli, and for cytotoxicity against HEK293T cells.",
       "metal": "Ir",
       "scaffold": "Cp Schiff-Base",
-      "doi": "10.26434/chemrxiv.15003837.v1",
+      "doi": "10.26434/chemrxiv.15003837/v1",
       "compound_count": 1440,
       "position_count": 3
     },
