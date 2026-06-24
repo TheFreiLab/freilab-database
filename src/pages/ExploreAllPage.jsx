@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { getMetricColor, PALETTE } from '../theme/palette'
+import { decodeFingerprint, topKNeighbors } from '../data/similarity'
 import '../components/LibraryGrid/LibraryGrid.css'
 import './ExploreAllPage.css'
 
@@ -11,6 +12,9 @@ const INNER_W = W - MARGIN.left - MARGIN.right
 const INNER_H = H - MARGIN.top - MARGIN.bottom
 const TICKS = 5
 const PAD = 0.06 // UMAP coords are pre-normalised to [0,1]; just pad a little
+const DEFAULT_DOMAIN = { x: [-PAD, 1 + PAD], y: [-PAD, 1 + PAD] }
+const MIN_TOPK = 5
+const MAX_TOPK = 50
 
 function scaleLinear(domain, range) {
   const [d0, d1] = domain
@@ -22,10 +26,9 @@ function niceTicks(min, max, n) {
   return Array.from({ length: n + 1 }, (_, i) => +(min + i * step).toPrecision(3))
 }
 
-const scX = scaleLinear([-PAD, 1 + PAD], [0, INNER_W])
-const scY = scaleLinear([-PAD, 1 + PAD], [INNER_H, 0])
-const xTicks = niceTicks(-PAD, 1 + PAD, TICKS)
-const yTicks = niceTicks(-PAD, 1 + PAD, TICKS)
+function recKey(rec) {
+  return `${rec.lib}::${rec.id}`
+}
 
 const COLOR_OPTIONS = [
   { key: 'lib',            label: 'Library', kind: 'categorical', palette: 'library' },
@@ -69,6 +72,8 @@ export default function ExploreAllPage() {
   const [colorKey, setColorKey] = useState('lib')
   const [pinned, setPinned]   = useState(null)
   const [tooltip, setTooltip] = useState(null)
+  const [similarityMode, setSimilarityMode] = useState(false)
+  const [topK, setTopK]       = useState(15)
   const tooltipRef = useRef(null)
 
   useEffect(() => {
@@ -109,6 +114,59 @@ export default function ExploreAllPage() {
     return getMetricColor(v, range.min, range.max, colorOpt.scale)
   }
 
+  // "Find similar compounds" — Jaccard nearest-neighbor search over the precomputed
+  // binarized ELECTRUM fingerprints (see converter/compute_embedding.py --combined).
+  const fingerprints = useMemo(
+    () => records ? records.map(r => decodeFingerprint(r.fp)) : null,
+    [records]
+  )
+  const indexByKey = useMemo(() => {
+    if (!records) return null
+    const m = new Map()
+    records.forEach((r, i) => m.set(recKey(r), i))
+    return m
+  }, [records])
+  const pinnedIndex = pinned && indexByKey ? indexByKey.get(recKey(pinned)) : null
+
+  const neighbors = useMemo(() => {
+    if (!similarityMode || pinnedIndex == null || !fingerprints) return null
+    return topKNeighbors(pinnedIndex, fingerprints, topK)
+  }, [similarityMode, pinnedIndex, fingerprints, topK])
+
+  // key -> similarity (0-1), only populated while similarity mode is active
+  const neighborSimilarity = useMemo(() => {
+    if (!neighbors) return null
+    const m = new Map()
+    for (const n of neighbors) m.set(recKey(records[n.index]), n.similarity)
+    return m
+  }, [neighbors, records])
+
+  // Zoom/pan the plot to fit the pinned compound + its neighbors while similarity mode
+  // is showing something; otherwise the full [0,1] UMAP extent.
+  const domain = useMemo(() => {
+    if (!similarityMode || !pinned || !neighbors || neighbors.length === 0) return DEFAULT_DOMAIN
+    const pts = [pinned, ...neighbors.map(n => records[n.index])]
+    const padAxis = (min, max) => {
+      const span = Math.max(max - min, 0.04) // floor avoids divide-by-zero on tight clusters
+      return [min - span * 0.25, max + span * 0.25]
+    }
+    const xs = pts.map(p => p.x), ys = pts.map(p => p.y)
+    return {
+      x: padAxis(Math.min(...xs), Math.max(...xs)),
+      y: padAxis(Math.min(...ys), Math.max(...ys)),
+    }
+  }, [similarityMode, pinned, neighbors, records])
+
+  const scX = useMemo(() => scaleLinear(domain.x, [0, INNER_W]), [domain])
+  const scY = useMemo(() => scaleLinear(domain.y, [INNER_H, 0]), [domain])
+  const xTicks = useMemo(() => niceTicks(domain.x[0], domain.x[1], TICKS), [domain])
+  const yTicks = useMemo(() => niceTicks(domain.y[0], domain.y[1], TICKS), [domain])
+
+  function closePinned() {
+    setPinned(null)
+    setSimilarityMode(false)
+  }
+
   return (
     <main className="explore-page">
       <div className="page-container">
@@ -130,7 +188,7 @@ export default function ExploreAllPage() {
           <div className="explore-scatter-root">
             <label className="explore-color-select">
               <span>Colour by</span>
-              <select value={colorKey} onChange={e => { setColorKey(e.target.value); setPinned(null) }}>
+              <select value={colorKey} onChange={e => { setColorKey(e.target.value); closePinned() }}>
                 {COLOR_OPTIONS.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
               </select>
             </label>
@@ -180,15 +238,22 @@ export default function ExploreAllPage() {
                 {records.map(rec => {
                   const cx = scX(rec.x)
                   const cy = scY(rec.y)
+                  // Zoomed domains (similarity mode) are a sub-region of the full plot;
+                  // points outside it fall outside the inner plot rect but are still
+                  // within the <svg>'s own canvas, so they must be skipped explicitly
+                  // rather than relying on overflow clipping.
+                  if (cx < -10 || cx > INNER_W + 10 || cy < -10 || cy > INNER_H + 10) return null
                   const isPinned = pinned && pinned.id === rec.id && pinned.lib === rec.lib
+                  const isNeighbor = neighborSimilarity?.has(recKey(rec)) ?? false
+                  const isDimmed = similarityMode && !!neighbors && !isPinned && !isNeighbor
                   return (
                     <circle
                       key={`${rec.lib}-${rec.id}`}
                       cx={cx}
                       cy={cy}
                       r={isPinned ? 5 : 3}
-                      fill={colorOf(rec)}
-                      fillOpacity={isPinned ? 1 : 0.75}
+                      fill={isDimmed ? '#D8DCDE' : colorOf(rec)}
+                      fillOpacity={isDimmed ? 0.35 : (isPinned ? 1 : 0.75)}
                       stroke={isPinned ? '#0C4E60' : '#fff'}
                       strokeWidth={isPinned ? 1.5 : 0.5}
                       className="explore-dot"
@@ -214,6 +279,12 @@ export default function ExploreAllPage() {
                       ? tooltip.rec[colorOpt.key].toFixed(2) : '—'}
                   </div>
                 )}
+                {neighborSimilarity?.has(recKey(tooltip.rec)) && (
+                  <div className="explore-tooltip-row">
+                    <span>Similarity</span>
+                    {(neighborSimilarity.get(recKey(tooltip.rec)) * 100).toFixed(0)}%
+                  </div>
+                )}
                 {(() => {
                   const svgs = getTooltipSvgs(tooltip.rec, data.buildingBlocks)
                   return svgs.length > 0 && (
@@ -232,9 +303,29 @@ export default function ExploreAllPage() {
 
             {pinned && (
               <div className="explore-pinned-card">
-                <button className="explore-pinned-close" onClick={() => setPinned(null)}>×</button>
+                <button className="explore-pinned-close" onClick={closePinned}>×</button>
                 <div className="explore-pinned-id">{pinned.id}</div>
                 <div className="explore-pinned-lib">{pinned.lib} · {pinned.metal ?? 'no metal'}</div>
+                <label className="explore-similarity-toggle">
+                  <input
+                    type="checkbox"
+                    checked={similarityMode}
+                    onChange={e => setSimilarityMode(e.target.checked)}
+                  />
+                  Show similar compounds
+                </label>
+                {similarityMode && (
+                  <div className="explore-similarity-controls">
+                    <span>Top {topK} most similar</span>
+                    <input
+                      type="range"
+                      min={MIN_TOPK}
+                      max={MAX_TOPK}
+                      value={topK}
+                      onChange={e => setTopK(+e.target.value)}
+                    />
+                  </div>
+                )}
                 {(() => {
                   const svgs = getTooltipSvgs(pinned, data.buildingBlocks)
                   return svgs.length > 0 && (

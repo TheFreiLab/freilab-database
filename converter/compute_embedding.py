@@ -35,12 +35,18 @@ distances are meaningful across library boundaries, not three independent
 layouts), writing public/data/combined_umap.json instead of touching the
 per-library JSONs:
     python compute_embedding.py ../public/data --combined
+
+Combined mode also stores each compound's binarized, bit-packed fingerprint
+("fp": base64 of 75 bytes / 598 bits) for the Explore page's client-side
+"find similar compounds" feature (src/data/similarity.js) — a Jaccard/Tanimoto
+nearest-neighbor search computed on demand in the browser, not precomputed.
 """
 
 import sys
 import json
 import argparse
 import hashlib
+import base64
 from pathlib import Path
 
 import numpy as np
@@ -215,7 +221,15 @@ def process_combined(data_dir):
             fp, metal = fingerprint_for_compound(lib['id'], c, bb_smiles)
             feats.append(fp)
 
-            record = {"id": c["id"], "lib": lib["id"], "metal": metal, "blocks": c["blocks"]}
+            # Binarized, bit-packed fingerprint for client-side Jaccard/Tanimoto similarity
+            # ("find similar compounds"). The ligand portion of fp is a summed count vector
+            # (for UMAP's Manhattan distance, left untouched); Jaccard needs a binary
+            # presence/absence vector, the standard cheminformatics convention for hashed
+            # fingerprints, so we threshold here rather than changing fp itself.
+            fp_bin = (fp > 0).astype(np.uint8)
+            fp_packed = base64.b64encode(np.packbits(fp_bin)).decode("ascii")
+
+            record = {"id": c["id"], "lib": lib["id"], "metal": metal, "blocks": c["blocks"], "fp": fp_packed}
             for canon_key, per_lib_key in CANONICAL_PROPERTIES.items():
                 src_key = per_lib_key.get(lib["id"])
                 record[canon_key] = get_prop_avg(c["props"].get(src_key)) if src_key else None

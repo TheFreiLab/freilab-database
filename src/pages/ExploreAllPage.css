@@ -49,8 +49,11 @@
 .legend-val { font-weight: 600; color: #1F2A2E; font-size: 0.75rem; }
 .legend-label { color: #6B7A80; }
 
-.explore-svg-wrap { overflow: visible; }
-.explore-dot { cursor: pointer; transition: r 0.08s; }
+/* hidden, not visible: similarity mode zooms the plotted domain to a sub-region, and
+   dots outside it (rendered dimmed, not filtered out) must clip at the plot edge rather
+   than spill across the rest of the page */
+.explore-svg-wrap { overflow: hidden; }
+.explore-dot { cursor: pointer; transition: r 0.08s, cx 0.25s ease, cy 0.25s ease, fill 0.15s, fill-opacity 0.15s; }
 .explore-dot:hover { r: 6px; }
 .explore-axis-label { font-size: 11px; fill: #6B7A80; }
 .explore-tick-label { font-size: 9px; fill: #6B7A80; }
@@ -95,3 +98,22 @@
 .explore-pinned-id { font-weight: 700; color: #1F2A2E; margin-bottom: 2px; }
 .explore-pinned-lib { font-size: 0.82rem; color: #6B7A80; margin-bottom: 10px; }
 .explore-pinned-link { font-size: 0.85rem; color: var(--primary); font-weight: 500; }
+
+.explore-similarity-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: #1F2A2E;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+.explore-similarity-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: #4B5563;
+  margin-bottom: 10px;
+}
+.explore-similarity-controls input[type="range"] { width: 100%; }
