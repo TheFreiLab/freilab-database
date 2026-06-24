@@ -30,18 +30,33 @@ function recKey(rec) {
   return `${rec.lib}::${rec.id}`
 }
 
+// `group` drives the <optgroup> the option appears under. Options with `libs` only
+// apply to compounds from those libraries — everything else renders as a hollow
+// "not applicable" ring rather than the filled "missing value" grey, since those
+// compounds' library doesn't measure this property at all (see compute_embedding.py
+// LIBRARY_SPECIFIC_PROPERTIES for why these can't be unified onto one shared scale).
+const GROUP_COMPARABLE = 'Comparable across libraries'
+const GROUP_SPECIFIC = 'Library-specific (not directly comparable)'
+
 const COLOR_OPTIONS = [
-  { key: 'lib',            label: 'Library', kind: 'categorical', palette: 'library' },
-  { key: 'metal',           label: 'Metal',   kind: 'categorical', palette: 'metal' },
-  { key: 'hek_viability',  label: 'HEK293T viability (%)', kind: 'continuous', scale: 'tox' },
-  { key: 'conversion_pct', label: 'Conversion (%)',        kind: 'continuous', scale: 'conv' },
-  { key: 'lig_mw',         label: 'Σ Ligand MW (Da)',      kind: 'continuous', scale: 'default' },
-  { key: 'lig_tpsa',       label: 'Σ Ligand TPSA (Å²)',    kind: 'continuous', scale: 'default' },
-  { key: 'lig_logp',       label: 'Mean Ligand logP',      kind: 'continuous', scale: 'default' },
-  { key: 'lig_hbd',        label: 'Σ Ligand HBD',          kind: 'continuous', scale: 'default' },
-  { key: 'lig_hba',        label: 'Σ Ligand HBA',          kind: 'continuous', scale: 'default' },
-  { key: 'lig_rotb',       label: 'Σ Ligand Rot. bonds',   kind: 'continuous', scale: 'default' },
-  { key: 'lig_arring',     label: 'Σ Ligand Arom. rings',  kind: 'continuous', scale: 'default' },
+  { key: 'lib',            label: 'Library', kind: 'categorical', palette: 'library', group: GROUP_COMPARABLE },
+  { key: 'metal',           label: 'Metal',   kind: 'categorical', palette: 'metal', group: GROUP_COMPARABLE },
+  { key: 'hek_viability',  label: 'HEK293T viability (%)', kind: 'continuous', scale: 'tox',  group: GROUP_COMPARABLE },
+  { key: 'conversion_pct', label: 'Conversion (%)',        kind: 'continuous', scale: 'conv', group: GROUP_COMPARABLE },
+  { key: 'lig_mw',         label: 'Σ Ligand MW (Da)',      kind: 'continuous', scale: 'default', group: GROUP_COMPARABLE },
+  { key: 'lig_tpsa',       label: 'Σ Ligand TPSA (Å²)',    kind: 'continuous', scale: 'default', group: GROUP_COMPARABLE },
+  { key: 'lig_logp',       label: 'Mean Ligand logP',      kind: 'continuous', scale: 'default', group: GROUP_COMPARABLE },
+  { key: 'lig_hbd',        label: 'Σ Ligand HBD',          kind: 'continuous', scale: 'default', group: GROUP_COMPARABLE },
+  { key: 'lig_hba',        label: 'Σ Ligand HBA',          kind: 'continuous', scale: 'default', group: GROUP_COMPARABLE },
+  { key: 'lig_rotb',       label: 'Σ Ligand Rot. bonds',   kind: 'continuous', scale: 'default', group: GROUP_COMPARABLE },
+  { key: 'lig_arring',     label: 'Σ Ligand Arom. rings',  kind: 'continuous', scale: 'default', group: GROUP_COMPARABLE },
+
+  { key: 'sa_50_od',  label: 'S. aureus 50µM, OD (IrCpSB/NOSB)',   kind: 'continuous', scale: 'activity', reverse: true, group: GROUP_SPECIFIC, libs: ['IrCpSB', 'NOSB'] },
+  { key: 'sa_12_od',  label: 'S. aureus 12.5µM, OD (IrCpSB/NOSB)', kind: 'continuous', scale: 'activity', reverse: true, group: GROUP_SPECIFIC, libs: ['IrCpSB', 'NOSB'] },
+  { key: 'ec_50_od',  label: 'E. coli 50µM, OD (IrCpSB/NOSB)',     kind: 'continuous', scale: 'activity', reverse: true, group: GROUP_SPECIFIC, libs: ['IrCpSB', 'NOSB'] },
+  { key: 'ec_100_od', label: 'E. coli 100µM, OD (NOSB only)',      kind: 'continuous', scale: 'activity', reverse: true, group: GROUP_SPECIFIC, libs: ['NOSB'] },
+  { key: 'mic_um',    label: 'MIC S. aureus, µM (TzLib only)',     kind: 'continuous', scale: 'activity', reverse: true, log: true, group: GROUP_SPECIFIC, libs: ['TzLib'] },
+  { key: 'sdr_um',    label: 'Selectivity SDR, µM (TzLib only)',   kind: 'continuous', scale: 'selectivity',             group: GROUP_SPECIFIC, libs: ['TzLib'] },
 ]
 
 function computeRange(records, key) {
@@ -107,13 +122,19 @@ export default function ExploreAllPage() {
     [records, colorKey, colorOpt.kind]
   )
 
+  // For library-specific options, compounds outside `libs` don't have this property
+  // at all (not just an unmeasured value) — rendered as a hollow ring, not grey.
+  function isApplicable(rec) {
+    return !colorOpt.libs || colorOpt.libs.includes(rec.lib)
+  }
+
   function colorOf(rec) {
     if (colorOpt.kind === 'categorical') {
       return PALETTE[colorOpt.palette]?.[rec[colorOpt.key]] ?? PALETTE.missing
     }
     const v = rec[colorOpt.key]
     if (v === null || v === undefined || !isFinite(v)) return PALETTE.missing
-    return getMetricColor(v, range.min, range.max, colorOpt.scale)
+    return getMetricColor(v, range.min, range.max, colorOpt.scale, { reverse: colorOpt.reverse, log: colorOpt.log })
   }
 
   // "Find similar compounds" — Jaccard nearest-neighbor search over the precomputed
@@ -248,9 +269,10 @@ export default function ExploreAllPage() {
           <p className="lead">
             One UMAP embedding fit across every compound in every library, from each
             compound's ELECTRUM fingerprint, so distances are comparable across
-            library boundaries. Coloured properties are only shown where the
-            underlying assay/metric is comparable across libraries; dots without
-            that data are left grey.
+            library boundaries. "Colour by" is split into properties comparable across
+            every library and ones specific to a subset (different assay, different
+            units) — for those, compounds from a library that doesn't measure it show
+            as a hollow ring rather than grey.
           </p>
         </div>
 
@@ -262,7 +284,13 @@ export default function ExploreAllPage() {
             <label className="explore-color-select">
               <span>Colour by</span>
               <select value={colorKey} onChange={e => { setColorKey(e.target.value); closePinned() }}>
-                {COLOR_OPTIONS.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
+                {[GROUP_COMPARABLE, GROUP_SPECIFIC].map(group => (
+                  <optgroup key={group} label={group}>
+                    {COLOR_OPTIONS.filter(o => o.group === group).map(o => (
+                      <option key={o.key} value={o.key}>{o.label}</option>
+                    ))}
+                  </optgroup>
+                ))}
               </select>
             </label>
 
@@ -283,7 +311,9 @@ export default function ExploreAllPage() {
                   style={{ background: `linear-gradient(to right, ${PALETTE.scales[colorOpt.scale].join(',')})` }}
                 />
                 <span className="legend-val">{range.max.toFixed(2)}</span>
-                <span className="legend-label">{colorOpt.label} (grey = not available for this compound)</span>
+                <span className="legend-label">
+                  {colorOpt.label} (grey = no value for this compound{colorOpt.libs ? '; hollow ring = not measured for this library' : ''})
+                </span>
               </div>
             )}
 
@@ -320,16 +350,20 @@ export default function ExploreAllPage() {
                   const isNeighbor = neighborSimilarity?.has(recKey(rec)) ?? false
                   const isDimmed = similarityMode && !!neighbors && !isPinned && !isNeighbor
                   const isComparing = compareSet.has(recKey(rec))
+                  // Library-specific colour-by: compounds from a library that doesn't
+                  // measure this property render hollow, distinct from "measured but
+                  // this compound's value is missing" (filled grey, via colorOf).
+                  const isNotApplicable = colorOpt.kind === 'continuous' && !isApplicable(rec)
                   return (
                     <circle
                       key={`${rec.lib}-${rec.id}`}
                       cx={cx}
                       cy={cy}
                       r={isPinned ? 5 : 3}
-                      fill={isDimmed ? '#D8DCDE' : colorOf(rec)}
-                      fillOpacity={isDimmed ? 0.35 : (isPinned ? 1 : 0.75)}
-                      stroke={isPinned ? '#0C4E60' : (isComparing ? '#E69F00' : '#fff')}
-                      strokeWidth={isPinned ? 1.5 : (isComparing ? 2 : 0.5)}
+                      fill={isNotApplicable ? 'none' : (isDimmed ? '#D8DCDE' : colorOf(rec))}
+                      fillOpacity={isNotApplicable ? 1 : (isDimmed ? 0.35 : (isPinned ? 1 : 0.75))}
+                      stroke={isPinned ? '#0C4E60' : (isComparing ? '#E69F00' : (isNotApplicable ? '#C8CDD0' : '#fff'))}
+                      strokeWidth={isPinned ? 1.5 : (isComparing ? 2 : (isNotApplicable ? 1 : 0.5))}
                       className="explore-dot"
                       onMouseEnter={e => setTooltip({ rec, clientX: e.clientX, clientY: e.clientY })}
                       onMouseMove={e => setTooltip({ rec, clientX: e.clientX, clientY: e.clientY })}

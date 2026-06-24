@@ -139,17 +139,30 @@ def get_prop_avg(v):
     return v.get('avg') if isinstance(v, dict) else v
 
 
-# Properties that mean the same thing across libraries despite different key
-# names, so they're safe to colour by in the cross-library view. Antibacterial
-# activity is deliberately NOT unified here: IrCpSB/NOSB report it as OD at a
-# fixed dose (sa_50/sa_12/ec_50/ec_100) while TzLib reports literal MIC in µM
-# (mic/sdr) — different assay design and units, not just different key names,
-# so combining them on one colour scale would be comparing unlike quantities.
+# Properties that mean the same thing across ALL THREE libraries despite different
+# key names, so they're safe to colour by on one shared scale.
 CANONICAL_PROPERTIES = {
     # All three libraries report this as % viability/growth at a fixed HEK293T exposure.
     'hek_viability':  {'IrCpSB': 'hek_50',     'TzLib': 'tox_avg',   'NOSB': 'hek_50'},
     # All three report HPLC conversion as a QC metric, same units.
     'conversion_pct': {'IrCpSB': 'conversion', 'TzLib': 'peak_pct',  'NOSB': 'conversion'},
+}
+
+# Antibacterial activity is NOT unified into one canonical key across all libraries:
+# IrCpSB/NOSB report OD at a fixed dose, TzLib reports literal MIC/SDR in µM —
+# different assay design and units, not just different key names, so combining
+# them on one colour scale would compare unlike quantities. Each entry below is
+# still only mapped from the libraries that actually share that exact assay/unit
+# (e.g. sa_50_od is shared by IrCpSB+NOSB, both OD; mic_um is TzLib-only) — any
+# library NOT listed here gets None, which the frontend renders as "not
+# applicable" (hollow ring) rather than "missing value" (filled grey).
+LIBRARY_SPECIFIC_PROPERTIES = {
+    'sa_50_od':  {'IrCpSB': 'sa_50', 'NOSB': 'sa_50'},
+    'sa_12_od':  {'IrCpSB': 'sa_12', 'NOSB': 'sa_12'},
+    'ec_50_od':  {'IrCpSB': 'ec_50', 'NOSB': 'ec_50'},
+    'ec_100_od': {'NOSB': 'ec_100'},
+    'mic_um':    {'TzLib': 'mic'},
+    'sdr_um':    {'TzLib': 'sdr'},
 }
 # Ligand descriptors (Stage 7a) already use identical keys/units in every
 # library's JSON — no mapping needed, just carry them through.
@@ -230,7 +243,7 @@ def process_combined(data_dir):
             fp_packed = base64.b64encode(np.packbits(fp_bin)).decode("ascii")
 
             record = {"id": c["id"], "lib": lib["id"], "metal": metal, "blocks": c["blocks"], "fp": fp_packed}
-            for canon_key, per_lib_key in CANONICAL_PROPERTIES.items():
+            for canon_key, per_lib_key in {**CANONICAL_PROPERTIES, **LIBRARY_SPECIFIC_PROPERTIES}.items():
                 src_key = per_lib_key.get(lib["id"])
                 record[canon_key] = get_prop_avg(c["props"].get(src_key)) if src_key else None
             for key in LIGAND_DESCRIPTOR_KEYS:
