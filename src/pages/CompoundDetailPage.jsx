@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import BBCard from '../components/BBCard'
 import ThreeDViewer from '../components/ThreeDViewer'
+import LcmsViewer from '../components/LcmsViewer'
 import './CompoundDetailPage.css'
 
 // ── Property value formatting ────────────────────────────────────────────────
@@ -216,6 +217,12 @@ export default function CompoundDetailPage() {
         <section className="detail-section">
           <h2>3D Structure</h2>
           <ThreeDViewer libId={libId} compoundId={decodedId} />
+        </section>
+
+        {/* ── LC-MS chromatogram ── */}
+        <section className="detail-section">
+          <h2>LC-MS Chromatogram</h2>
+          <LcmsViewer libId={libId} compoundId={decodedId} />
         </section>
 
       </div>
