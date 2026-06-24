@@ -117,3 +117,79 @@
   margin-bottom: 10px;
 }
 .explore-similarity-controls input[type="range"] { width: 100%; }
+.explore-similarity-hint { color: #9CA8AD; font-style: italic; }
+
+.explore-repin-confirm {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 950;
+  background: #fff;
+  border: 1px solid #D1D8DC;
+  border-radius: 10px;
+  box-shadow: 0 10px 32px rgba(0,0,0,0.18);
+  padding: 18px 20px;
+  max-width: 280px;
+}
+.explore-repin-confirm p { margin: 0 0 12px; font-size: 0.85rem; color: #1F2A2E; }
+.explore-repin-confirm-actions { display: flex; flex-direction: column; gap: 6px; }
+.explore-repin-confirm-actions button {
+  padding: 7px 10px;
+  border: 1px solid #C8CDD0;
+  border-radius: 5px;
+  background: #fff;
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-align: left;
+}
+.explore-repin-confirm-actions button:hover { border-color: var(--primary); background: #EEF5FA; }
+.explore-repin-cancel { color: #6B7A80; border: none !important; background: none !important; text-align: center !important; }
+
+.explore-compare-tray {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border, #E3E8EA);
+}
+.explore-compare-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.explore-compare-header h2 { font-size: 1.1rem; color: #1F2A2E; margin: 0; }
+.explore-compare-header button {
+  border: 1px solid #C8CDD0;
+  border-radius: 5px;
+  background: #fff;
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  color: #4B5563;
+  cursor: pointer;
+}
+.explore-compare-header button:hover { border-color: #D55E00; color: #D55E00; }
+
+.explore-compare-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.explore-compare-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid #D1D8DC;
+  border-radius: 8px;
+  padding: 14px 16px;
+  width: 270px; /* fits 3 structure thumbnails (72px + 8px gap each) on one row */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.explore-compare-card-remove {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  border: none;
+  background: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: #6B7A80;
+}

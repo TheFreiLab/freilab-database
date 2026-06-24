@@ -74,6 +74,8 @@ export default function ExploreAllPage() {
   const [tooltip, setTooltip] = useState(null)
   const [similarityMode, setSimilarityMode] = useState(false)
   const [topK, setTopK]       = useState(15)
+  const [compareSet, setCompareSet] = useState(() => new Map()) // recKey -> record, insertion-ordered
+  const [pendingRepin, setPendingRepin] = useState(null)        // record awaiting repin confirmation
   const tooltipRef = useRef(null)
 
   useEffect(() => {
@@ -167,6 +169,77 @@ export default function ExploreAllPage() {
     setSimilarityMode(false)
   }
 
+  function toggleCompare(rec) {
+    setCompareSet(prev => {
+      const next = new Map(prev)
+      const key = recKey(rec)
+      if (next.has(key)) next.delete(key)
+      else next.set(key, rec)
+      return next
+    })
+  }
+
+  // Clicking a highlighted neighbor toggles it into/out of the compare tray (focal compound
+  // unchanged). Clicking anything else re-pins — but if the tray has items, that's deferred
+  // behind a confirmation so an ordinary click never silently mixes unrelated searches together.
+  function handleDotClick(rec) {
+    const isSamePinned = pinned && pinned.id === rec.id && pinned.lib === rec.lib
+    if (isSamePinned) return
+
+    if (similarityMode && neighborSimilarity?.has(recKey(rec))) {
+      toggleCompare(rec)
+      return
+    }
+    if (compareSet.size > 0) {
+      setPendingRepin(rec)
+    } else {
+      setPinned(rec)
+      setTooltip(null)
+    }
+  }
+
+  function confirmRepin(keepCompare) {
+    if (!keepCompare) setCompareSet(new Map())
+    setPinned(pendingRepin)
+    setTooltip(null)
+    setPendingRepin(null)
+  }
+
+  function renderInfoRows(rec) {
+    return (
+      <>
+        <div className="explore-tooltip-row"><span>Library</span>{rec.lib}</div>
+        <div className="explore-tooltip-row"><span>Metal</span>{rec.metal ?? '—'}</div>
+        {colorOpt.kind === 'continuous' && (
+          <div className="explore-tooltip-row">
+            <span>{colorOpt.label}</span>
+            {rec[colorOpt.key] !== null && rec[colorOpt.key] !== undefined ? rec[colorOpt.key].toFixed(2) : '—'}
+          </div>
+        )}
+        {neighborSimilarity?.has(recKey(rec)) && (
+          <div className="explore-tooltip-row">
+            <span>Similarity</span>
+            {(neighborSimilarity.get(recKey(rec)) * 100).toFixed(0)}%
+          </div>
+        )}
+      </>
+    )
+  }
+
+  function renderStructures(rec) {
+    const svgs = getTooltipSvgs(rec, data.buildingBlocks)
+    return svgs.length > 0 && (
+      <div className="grid-tooltip-bbs">
+        {svgs.map(({ pos, code, svg, name }) => (
+          <div key={pos} className="grid-tooltip-bb">
+            <div className="bb-label">{pos}: {code}</div>
+            <div className="bb-svg" dangerouslySetInnerHTML={{ __html: svg }} title={name} />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <main className="explore-page">
       <div className="page-container">
@@ -246,6 +319,7 @@ export default function ExploreAllPage() {
                   const isPinned = pinned && pinned.id === rec.id && pinned.lib === rec.lib
                   const isNeighbor = neighborSimilarity?.has(recKey(rec)) ?? false
                   const isDimmed = similarityMode && !!neighbors && !isPinned && !isNeighbor
+                  const isComparing = compareSet.has(recKey(rec))
                   return (
                     <circle
                       key={`${rec.lib}-${rec.id}`}
@@ -254,13 +328,13 @@ export default function ExploreAllPage() {
                       r={isPinned ? 5 : 3}
                       fill={isDimmed ? '#D8DCDE' : colorOf(rec)}
                       fillOpacity={isDimmed ? 0.35 : (isPinned ? 1 : 0.75)}
-                      stroke={isPinned ? '#0C4E60' : '#fff'}
-                      strokeWidth={isPinned ? 1.5 : 0.5}
+                      stroke={isPinned ? '#0C4E60' : (isComparing ? '#E69F00' : '#fff')}
+                      strokeWidth={isPinned ? 1.5 : (isComparing ? 2 : 0.5)}
                       className="explore-dot"
                       onMouseEnter={e => setTooltip({ rec, clientX: e.clientX, clientY: e.clientY })}
                       onMouseMove={e => setTooltip({ rec, clientX: e.clientX, clientY: e.clientY })}
                       onMouseLeave={() => setTooltip(null)}
-                      onClick={() => { setPinned(rec); setTooltip(null) }}
+                      onClick={() => handleDotClick(rec)}
                     />
                   )
                 })}
@@ -270,34 +344,22 @@ export default function ExploreAllPage() {
             {tooltip && (
               <div ref={tooltipRef} className="explore-tooltip">
                 <div className="explore-tooltip-id">{tooltip.rec.id}</div>
-                <div className="explore-tooltip-row"><span>Library</span>{tooltip.rec.lib}</div>
-                <div className="explore-tooltip-row"><span>Metal</span>{tooltip.rec.metal ?? '—'}</div>
-                {colorOpt.kind === 'continuous' && (
-                  <div className="explore-tooltip-row">
-                    <span>{colorOpt.label}</span>
-                    {tooltip.rec[colorOpt.key] !== null && tooltip.rec[colorOpt.key] !== undefined
-                      ? tooltip.rec[colorOpt.key].toFixed(2) : '—'}
-                  </div>
-                )}
-                {neighborSimilarity?.has(recKey(tooltip.rec)) && (
-                  <div className="explore-tooltip-row">
-                    <span>Similarity</span>
-                    {(neighborSimilarity.get(recKey(tooltip.rec)) * 100).toFixed(0)}%
-                  </div>
-                )}
-                {(() => {
-                  const svgs = getTooltipSvgs(tooltip.rec, data.buildingBlocks)
-                  return svgs.length > 0 && (
-                    <div className="grid-tooltip-bbs">
-                      {svgs.map(({ pos, code, svg, name }) => (
-                        <div key={pos} className="grid-tooltip-bb">
-                          <div className="bb-label">{pos}: {code}</div>
-                          <div className="bb-svg" dangerouslySetInnerHTML={{ __html: svg }} title={name} />
-                        </div>
-                      ))}
-                    </div>
-                  )
-                })()}
+                {renderInfoRows(tooltip.rec)}
+                {renderStructures(tooltip.rec)}
+              </div>
+            )}
+
+            {pendingRepin && (
+              <div className="explore-repin-confirm">
+                <p>
+                  You have {compareSet.size} compound{compareSet.size > 1 ? 's' : ''} in your
+                  comparison list.
+                </p>
+                <div className="explore-repin-confirm-actions">
+                  <button onClick={() => confirmRepin(true)}>Keep comparing, switch focus</button>
+                  <button onClick={() => confirmRepin(false)}>Clear comparison &amp; switch</button>
+                  <button className="explore-repin-cancel" onClick={() => setPendingRepin(null)}>Cancel</button>
+                </div>
               </div>
             )}
 
@@ -324,26 +386,34 @@ export default function ExploreAllPage() {
                       value={topK}
                       onChange={e => setTopK(+e.target.value)}
                     />
+                    <span className="explore-similarity-hint">Click a highlighted neighbor to compare it</span>
                   </div>
                 )}
-                {(() => {
-                  const svgs = getTooltipSvgs(pinned, data.buildingBlocks)
-                  return svgs.length > 0 && (
-                    <div className="grid-tooltip-bbs">
-                      {svgs.map(({ pos, code, svg, name }) => (
-                        <div key={pos} className="grid-tooltip-bb">
-                          <div className="bb-label">{pos}: {code}</div>
-                          <div className="bb-svg" dangerouslySetInnerHTML={{ __html: svg }} title={name} />
-                        </div>
-                      ))}
-                    </div>
-                  )
-                })()}
+                {renderStructures(pinned)}
                 <Link to={`/compound/${pinned.lib}/${pinned.id}`} className="explore-pinned-link">
                   View compound details →
                 </Link>
               </div>
             )}
+          </div>
+        )}
+
+        {compareSet.size > 0 && (
+          <div className="explore-compare-tray">
+            <div className="explore-compare-header">
+              <h2>Comparing {compareSet.size} compound{compareSet.size > 1 ? 's' : ''}</h2>
+              <button onClick={() => setCompareSet(new Map())}>Clear all</button>
+            </div>
+            <div className="explore-compare-cards">
+              {[...compareSet.values()].map(rec => (
+                <div key={recKey(rec)} className="explore-compare-card">
+                  <button className="explore-compare-card-remove" onClick={() => toggleCompare(rec)}>×</button>
+                  <div className="explore-pinned-id">{rec.id}</div>
+                  {renderInfoRows(rec)}
+                  {renderStructures(rec)}
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
