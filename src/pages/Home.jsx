@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import LibraryCard from '../components/LibraryCard'
+import PeriodicTableMini from '../components/PeriodicTableMini'
 import './Home.css'
 
 export default function Home() {
@@ -18,6 +19,10 @@ export default function Home() {
     ? manifest.libraries.reduce((sum, lib) => sum + lib.compound_count, 0)
     : null
 
+  const coveredMetals = manifest
+    ? [...new Set(manifest.libraries.flatMap(lib => lib.metal.split('/').map(m => m.trim())))]
+    : []
+
   return (
     <main className="home-page">
       <div className="page-container">
@@ -33,6 +38,7 @@ export default function Home() {
             <div className="total-compounds">
               <span className="total-compounds-count">{totalCompounds.toLocaleString()}</span>
               <span className="total-compounds-label">compounds total</span>
+              <PeriodicTableMini highlight={coveredMetals} />
             </div>
           )}
         </div>

@@ -1,0 +1,19 @@
+.ptm-svg { display: block; }
+
+.ptm-cell {
+  fill: #F3F4F6;
+  stroke: #D8DCDE;
+  stroke-width: 0.5;
+}
+
+.ptm-cell-highlight {
+  fill: var(--primary);
+  stroke: var(--primary);
+}
+
+.ptm-label {
+  font-size: 6.5px;
+  font-weight: 700;
+  fill: #fff;
+  pointer-events: none;
+}
