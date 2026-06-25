@@ -51,13 +51,28 @@ const COLOR_OPTIONS = [
   { key: 'lig_rotb',       label: 'Σ Ligand Rot. bonds',   kind: 'continuous', scale: 'default', group: GROUP_COMPARABLE },
   { key: 'lig_arring',     label: 'Σ Ligand Arom. rings',  kind: 'continuous', scale: 'default', group: GROUP_COMPARABLE },
 
-  { key: 'sa_50_od',  label: 'S. aureus 50µM, OD (IrCpSB/NOSB)',   kind: 'continuous', scale: 'activity', reverse: true, group: GROUP_SPECIFIC, libs: ['IrCpSB', 'NOSB'] },
-  { key: 'sa_12_od',  label: 'S. aureus 12.5µM, OD (IrCpSB/NOSB)', kind: 'continuous', scale: 'activity', reverse: true, group: GROUP_SPECIFIC, libs: ['IrCpSB', 'NOSB'] },
-  { key: 'ec_50_od',  label: 'E. coli 50µM, OD (IrCpSB/NOSB)',     kind: 'continuous', scale: 'activity', reverse: true, group: GROUP_SPECIFIC, libs: ['IrCpSB', 'NOSB'] },
-  { key: 'ec_100_od', label: 'E. coli 100µM, OD (NOSB only)',      kind: 'continuous', scale: 'activity', reverse: true, group: GROUP_SPECIFIC, libs: ['NOSB'] },
-  { key: 'mic_um',    label: 'MIC S. aureus, µM (TzLib only)',     kind: 'continuous', scale: 'activity', reverse: true, log: true, group: GROUP_SPECIFIC, libs: ['TzLib'] },
-  { key: 'sdr_um',    label: 'Selectivity SDR, µM (TzLib only)',   kind: 'continuous', scale: 'selectivity',             group: GROUP_SPECIFIC, libs: ['TzLib'] },
+  // Labels deliberately don't name libraries inline — labelWithLibs() appends
+  // that from `libs` automatically, so adding a library to an existing entry
+  // (or adding a new entry) never requires hand-editing label text.
+  { key: 'sa_50_od',  label: 'S. aureus 50µM, OD',   kind: 'continuous', scale: 'activity', reverse: true, group: GROUP_SPECIFIC, libs: ['IrCpSB', 'NOSB'] },
+  { key: 'sa_12_od',  label: 'S. aureus 12.5µM, OD', kind: 'continuous', scale: 'activity', reverse: true, group: GROUP_SPECIFIC, libs: ['IrCpSB', 'NOSB'] },
+  { key: 'ec_50_od',  label: 'E. coli 50µM, OD',     kind: 'continuous', scale: 'activity', reverse: true, group: GROUP_SPECIFIC, libs: ['IrCpSB', 'NOSB'] },
+  { key: 'ec_100_od', label: 'E. coli 100µM, OD',    kind: 'continuous', scale: 'activity', reverse: true, group: GROUP_SPECIFIC, libs: ['NOSB'] },
+  // mic_um spans two different organisms/strains (TzLib: S. aureus, MnSB: MRSA) —
+  // see the LIBRARY_SPECIFIC_PROPERTIES comment in compute_embedding.py.
+  { key: 'mic_um',    label: 'MIC, µM',              kind: 'continuous', scale: 'activity', reverse: true, log: true, group: GROUP_SPECIFIC, libs: ['TzLib', 'MnSB'] },
+  { key: 'sdr_um',    label: 'Selectivity SDR, µM',  kind: 'continuous', scale: 'selectivity',             group: GROUP_SPECIFIC, libs: ['TzLib'] },
 ]
+
+// Appends "(Lib only)" or "(LibA/LibB)" from `opt.libs` rather than requiring
+// it hand-typed into every label — the whole point being that adding a library
+// to an option's `libs` array is enough, nothing else needs editing.
+function labelWithLibs(opt) {
+  if (!opt.libs) return opt.label
+  return opt.libs.length === 1
+    ? `${opt.label} (${opt.libs[0]} only)`
+    : `${opt.label} (${opt.libs.join('/')})`
+}
 
 function computeRange(records, key) {
   let min = Infinity, max = -Infinity
@@ -272,7 +287,11 @@ export default function ExploreAllPage() {
             library boundaries. "Colour by" is split into properties comparable across
             every library and ones specific to a subset (different assay, different
             units) — for those, compounds from a library that doesn't measure it show
-            as a hollow ring rather than grey.
+            as a hollow ring rather than grey, not a missing value. A few entries (e.g.
+            MIC) combine the same kind of measurement from more than one library even
+            though the exact bacterial strain or protocol can differ between them —
+            check a compound's own library page if you need the precise assay it was
+            measured with.
           </p>
         </div>
 
@@ -287,7 +306,7 @@ export default function ExploreAllPage() {
                 {[GROUP_COMPARABLE, GROUP_SPECIFIC].map(group => (
                   <optgroup key={group} label={group}>
                     {COLOR_OPTIONS.filter(o => o.group === group).map(o => (
-                      <option key={o.key} value={o.key}>{o.label}</option>
+                      <option key={o.key} value={o.key}>{labelWithLibs(o)}</option>
                     ))}
                   </optgroup>
                 ))}
@@ -312,7 +331,7 @@ export default function ExploreAllPage() {
                 />
                 <span className="legend-val">{range.max.toFixed(2)}</span>
                 <span className="legend-label">
-                  {colorOpt.label} (grey = no value for this compound{colorOpt.libs ? '; hollow ring = not measured for this library' : ''})
+                  {labelWithLibs(colorOpt)} (grey = no value for this compound{colorOpt.libs ? '; hollow ring = not measured for this library' : ''})
                 </span>
               </div>
             )}

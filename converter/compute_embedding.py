@@ -163,19 +163,25 @@ CANONICAL_PROPERTIES = {
 }
 
 # Antibacterial activity is NOT unified into one canonical key across all libraries:
-# IrCpSB/NOSB report OD at a fixed dose, TzLib reports literal MIC/SDR in µM —
+# IrCpSB/NOSB report OD at a fixed dose, TzLib/MnSB report literal MIC in µM —
 # different assay design and units, not just different key names, so combining
-# them on one colour scale would compare unlike quantities. Each entry below is
-# still only mapped from the libraries that actually share that exact assay/unit
-# (e.g. sa_50_od is shared by IrCpSB+NOSB, both OD; mic_um is TzLib-only) — any
-# library NOT listed here gets None, which the frontend renders as "not
-# applicable" (hollow ring) rather than "missing value" (filled grey).
+# OD with MIC on one colour scale would compare unlike quantities. Each entry
+# below is still only mapped from the libraries that actually share that exact
+# assay/unit (e.g. sa_50_od is shared by IrCpSB+NOSB, both OD) — any library NOT
+# listed here gets None, which the frontend renders as "not applicable" (hollow
+# ring) rather than "missing value" (filled grey).
+#
+# mic_um IS shared across TzLib (literal MIC, S. aureus) and MnSB (literal MIC,
+# MRSA) — same unit (µM) and same kind of measurement (a literal MIC, not an OD
+# proxy), so it's reasonable to colour them on one scale despite the different
+# strain. This is a judgment call, not a strict equivalence — flagged to the
+# user in the frontend's "Colour by" description rather than silently implied.
 LIBRARY_SPECIFIC_PROPERTIES = {
     'sa_50_od':  {'IrCpSB': 'sa_50', 'NOSB': 'sa_50'},
     'sa_12_od':  {'IrCpSB': 'sa_12', 'NOSB': 'sa_12'},
     'ec_50_od':  {'IrCpSB': 'ec_50', 'NOSB': 'ec_50'},
     'ec_100_od': {'NOSB': 'ec_100'},
-    'mic_um':    {'TzLib': 'mic'},
+    'mic_um':    {'TzLib': 'mic', 'MnSB': 'mic_um'},
     'sdr_um':    {'TzLib': 'sdr'},
 }
 # Ligand descriptors (Stage 7a) already use identical keys/units in every
