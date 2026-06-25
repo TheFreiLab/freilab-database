@@ -119,6 +119,19 @@
 .explore-similarity-controls input[type="range"] { width: 100%; }
 .explore-similarity-hint { color: #9CA8AD; font-style: italic; }
 
+.explore-add-all-btn {
+  align-self: flex-start;
+  margin-top: 2px;
+  border: 1px solid #C8CDD0;
+  border-radius: 5px;
+  background: #fff;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  color: #4B5563;
+  cursor: pointer;
+}
+.explore-add-all-btn:hover { border-color: var(--primary); color: var(--primary); }
+
 .explore-repin-confirm {
   position: fixed;
   top: 50%;

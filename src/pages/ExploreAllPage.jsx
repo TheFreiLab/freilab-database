@@ -215,6 +215,18 @@ export default function ExploreAllPage() {
     })
   }
 
+  function addAllNeighborsToCompare() {
+    if (!neighbors) return
+    setCompareSet(prev => {
+      const next = new Map(prev)
+      for (const n of neighbors) {
+        const rec = records[n.index]
+        next.set(recKey(rec), rec)
+      }
+      return next
+    })
+  }
+
   // Clicking a highlighted neighbor toggles it into/out of the compare tray (focal compound
   // unchanged). Clicking anything else re-pins — but if the tray has items, that's deferred
   // behind a confirmation so an ordinary click never silently mixes unrelated searches together.
@@ -440,6 +452,11 @@ export default function ExploreAllPage() {
                       onChange={e => setTopK(+e.target.value)}
                     />
                     <span className="explore-similarity-hint">Click a highlighted neighbor to compare it</span>
+                    {neighbors && neighbors.length > 0 && (
+                      <button className="explore-add-all-btn" onClick={addAllNeighborsToCompare}>
+                        Add all {neighbors.length} neighbors to comparison
+                      </button>
+                    )}
                   </div>
                 )}
                 {renderStructures(pinned)}
