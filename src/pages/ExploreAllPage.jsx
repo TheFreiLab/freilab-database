@@ -152,6 +152,16 @@ export default function ExploreAllPage() {
     return getMetricColor(v, range.min, range.max, colorOpt.scale, { reverse: colorOpt.reverse, log: colorOpt.log })
   }
 
+  // Properties to show in each compare-tray card: every continuous property that
+  // has a value for at least one compound currently in the tray, independent of
+  // the main "Colour by" selection — so comparing a different property within the
+  // selected panel never touches the main scatter's colouring/zoom/domain.
+  const compareCols = useMemo(() => {
+    if (compareSet.size === 0) return []
+    const recs = [...compareSet.values()]
+    return COLOR_OPTIONS.filter(o => o.kind === 'continuous' && recs.some(r => r[o.key] != null))
+  }, [compareSet])
+
   // "Find similar compounds" — Jaccard nearest-neighbor search over the precomputed
   // binarized ELECTRUM fingerprints (see converter/compute_embedding.py --combined).
   const fingerprints = useMemo(
@@ -264,6 +274,29 @@ export default function ExploreAllPage() {
             {rec[colorOpt.key] !== null && rec[colorOpt.key] !== undefined ? rec[colorOpt.key].toFixed(2) : '—'}
           </div>
         )}
+        {neighborSimilarity?.has(recKey(rec)) && (
+          <div className="explore-tooltip-row">
+            <span>Similarity</span>
+            {(neighborSimilarity.get(recKey(rec)) * 100).toFixed(0)}%
+          </div>
+        )}
+      </>
+    )
+  }
+
+  // Like renderInfoRows, but for compare-tray cards: shows every property in
+  // compareCols instead of just the currently-selected colour-by one.
+  function renderCompareRows(rec) {
+    return (
+      <>
+        <div className="explore-tooltip-row"><span>Library</span>{rec.lib}</div>
+        <div className="explore-tooltip-row"><span>Metal</span>{rec.metal ?? '—'}</div>
+        {compareCols.map(o => (
+          <div key={o.key} className="explore-tooltip-row">
+            <span>{o.label}</span>
+            {rec[o.key] !== null && rec[o.key] !== undefined ? rec[o.key].toFixed(2) : '—'}
+          </div>
+        ))}
         {neighborSimilarity?.has(recKey(rec)) && (
           <div className="explore-tooltip-row">
             <span>Similarity</span>
@@ -479,7 +512,7 @@ export default function ExploreAllPage() {
                 <div key={recKey(rec)} className="explore-compare-card">
                   <button className="explore-compare-card-remove" onClick={() => toggleCompare(rec)}>×</button>
                   <div className="explore-pinned-id">{rec.id}</div>
-                  {renderInfoRows(rec)}
+                  {renderCompareRows(rec)}
                   {renderStructures(rec)}
                 </div>
               ))}
