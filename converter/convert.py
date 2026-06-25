@@ -667,7 +667,13 @@ MNSB_AXIAL_CODE = {"0": "wo", "1": "MeIm", "2": "Clo", "3": "MeBeIm", "4": "DMAP
 def _parse_mnsb_mic(raw):
     """Returns (numeric_value_or_None, raw_text_or_None).
 
-    Plain numbers (incl. 0, the confirmed-inactive sentinel) -> (float, None).
+    Plain numbers -> (float, None).
+    0 is the source's confirmed-inactive sentinel (tested, no activity found at
+    any dose — NOT untested) — displayed identically to a right-censored
+    ">100" result rather than literally "0.00 µM", since both mean the same
+    thing in practice and 0 would otherwise sort/colour as the MOST potent
+    compound, which is backwards. (User decision 2026-06-26, after noticing
+    237/420 compounds showing "0.00 µM" on the site.)
     Right-censored (">100") -> (100.0, ">100").
     A dilution-bracket range ("50-25") -> (50.0, "50-25") — the upper/first
     bound, so the numeric value is always the conservative (less potent) end.
@@ -675,6 +681,8 @@ def _parse_mnsb_mic(raw):
     if raw is None:
         return None, None
     if isinstance(raw, (int, float)):
+        if float(raw) == 0:
+            return 100.0, ">100"
         return float(raw), None
     s = str(raw).strip()
     if s == "":
