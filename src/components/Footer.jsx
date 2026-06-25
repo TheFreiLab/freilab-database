@@ -1,9 +1,11 @@
 import './Footer.css'
 
 // Injected at build time (vite.config.js) — always reflects the actual build/
-// deploy, not something that needs editing by hand on every push.
-const buildDate = new Date(__BUILD_DATE__).toLocaleDateString('en-GB', {
+// deploy, not something that needs editing by hand on every push. Includes
+// h:m:s, not just the date, since deploys currently happen several times a day.
+const buildDate = new Date(__BUILD_DATE__).toLocaleString('en-GB', {
   day: 'numeric', month: 'short', year: 'numeric',
+  hour: '2-digit', minute: '2-digit', second: '2-digit',
 })
 
 export default function Footer() {
