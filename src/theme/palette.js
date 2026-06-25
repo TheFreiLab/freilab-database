@@ -30,6 +30,7 @@ export const PALETTE = {
     IrCpSB: '#0072B2',
     TzLib:  '#D55E00',
     NOSB:   '#009E73',
+    MnSB:   '#CC79A7',
   },
 
   // ── Categorical: metal identity (cross-library explorer) ──────────────────

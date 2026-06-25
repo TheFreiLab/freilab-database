@@ -9,6 +9,7 @@ Supported library IDs:
     IrCpSB    — Ir Cp Schiff-Base combinatorial library (single sheet)
     TzLib     — Metal-Triazole combinatorial library (multi-sheet)
     NOSB      — N,O-Schiff Base Ru/Ir combinatorial library (multi-sheet)
+    MnSB      — Manganese(I) Schiff-Base combinatorial library (single sheet)
 
 Writes:
     <output_dir>/manifest.json
@@ -66,6 +67,17 @@ LIBRARY_META = {
         "metal": "Ir / Ru",
         "scaffold": "N,O-Schiff Base",
         "doi": "10.26434/chemrxiv.15005024/v1",
+    },
+    "MnSB": {
+        "title": "Manganese(I) Schiff-Base Library",
+        "description": (
+            "420 manganese(I) tricarbonyl Schiff-base compounds from a "
+            "combinatorial library (6 axial ligands × 10 amines × 7 aldehydes), "
+            "screened for antibacterial activity against MRSA."
+        ),
+        "metal": "Mn",
+        "scaffold": "Schiff Base",
+        "doi": "10.1039/D3SC05326A",
     },
 }
 
@@ -628,6 +640,118 @@ def convert_nosb(wb, library_id):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# MnSB — Manganese(I) Schiff-Base library (single clean sheet, MIC only)
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# Source is Manganese420_GramPositive_MRSA_Consolidated.xlsx — already a clean,
+# validated, single-sheet workbook (see WebsiteDatabase/), not a raw lab file,
+# so this converter is much simpler than the others: no multi-sheet reconciling,
+# no corrupted-column workarounds. Deliberately scoped to MIC only per request —
+# the workbook's OD600/Screen_Conc/PublishedSI columns are intentionally ignored.
+
+MNSB_POSITIONS = [
+    {"key": "AxialLigand", "label": "Axial Ligand"},
+    {"key": "Amine",       "label": "Amine"},
+    {"key": "Aldehyde",    "label": "Aldehyde"},
+]
+
+MNSB_PROPERTIES = [
+    {"key": "mic_um", "label": "MIC (MRSA)", "unit": "µM", "role": "primary", "group": "Antibacterial"},
+]
+
+# AxialLigand_ID (0-5) -> short code used in building blocks / compound IDs.
+# Matches the published paper's own naming (Table S1).
+MNSB_AXIAL_CODE = {"0": "wo", "1": "MeIm", "2": "Clo", "3": "MeBeIm", "4": "DMAP", "5": "Quin"}
+
+
+def _parse_mnsb_mic(raw):
+    """Returns (numeric_value_or_None, raw_text_or_None).
+
+    Plain numbers (incl. 0, the confirmed-inactive sentinel) -> (float, None).
+    Right-censored (">100") -> (100.0, ">100").
+    A dilution-bracket range ("50-25") -> (50.0, "50-25") — the upper/first
+    bound, so the numeric value is always the conservative (less potent) end.
+    """
+    if raw is None:
+        return None, None
+    if isinstance(raw, (int, float)):
+        return float(raw), None
+    s = str(raw).strip()
+    if s == "":
+        return None, None
+    if s.startswith(">"):
+        try:
+            return float(s[1:].strip()), s
+        except ValueError:
+            return None, s
+    if "-" in s:
+        try:
+            return float(s.split("-")[0].strip()), s
+        except ValueError:
+            return None, s
+    try:
+        return float(s), None
+    except ValueError:
+        return None, s
+
+
+def convert_mnsb(wb, library_id):
+    ws = wb["Compounds"]
+    rows = list(ws.iter_rows(values_only=True))
+    header, data_rows = rows[0], rows[1:]
+    col = {name: i for i, name in enumerate(header)}
+    print(f"  {len(data_rows)} compound rows")
+
+    bb_map = {"AxialLigand": {}, "Amine": {}, "Aldehyde": {}}
+    compounds = []
+    for row in data_rows:
+        axial_id  = str(row[col["AxialLigand_ID"]])
+        amine_id  = str(row[col["Amine_ID"]])
+        ald_id    = str(row[col["Aldehyde_ID"]])
+        axial_smi = row[col["AxialLigand_SMILES"]]
+        amine_smi = row[col["Amine_SMILES"]]
+        ald_smi   = row[col["Aldehyde_SMILES"]]
+
+        axial_code = MNSB_AXIAL_CODE[axial_id]
+        amine_code = f"Am{amine_id}"
+        ald_code   = f"Al{ald_id}"
+
+        if axial_smi not in bb_map["AxialLigand"]:
+            bb_map["AxialLigand"][axial_smi] = axial_code  # None SMILES for "wo" — fine, same as TzLib's null scaffolds
+        if amine_smi and amine_smi not in bb_map["Amine"]:
+            bb_map["Amine"][amine_smi] = amine_code
+        if ald_smi and ald_smi not in bb_map["Aldehyde"]:
+            bb_map["Aldehyde"][ald_smi] = ald_code
+
+        mic_val, mic_raw = _parse_mnsb_mic(row[col["MIC_MRSA_uM"]])
+        compound = {
+            "id": f"{axial_code}_{amine_code}_{ald_code}",
+            "blocks": {"AxialLigand": axial_code, "Amine": amine_code, "Aldehyde": ald_code},
+            "props": {"mic_um": mic_val},
+        }
+        if mic_raw is not None:
+            compound["mic_raw"] = mic_raw
+        compounds.append(compound)
+
+    print("Generating SVGs ...")
+    building_blocks = render_building_blocks(bb_map)
+    print(f"  AxialLigand: {len(building_blocks['AxialLigand'])} | "
+          f"Amine: {len(building_blocks['Amine'])} | "
+          f"Aldehyde: {len(building_blocks['Aldehyde'])}")
+    print(f"  Total compounds: {len(compounds)}")
+
+    meta = LIBRARY_META[library_id]
+    return {
+        "id": library_id, "title": meta["title"], "description": meta["description"],
+        "metal": meta["metal"], "scaffold": meta["scaffold"], "doi": meta["doi"],
+        "positions":       MNSB_POSITIONS,
+        "properties":      MNSB_PROPERTIES,
+        "building_blocks": building_blocks,
+        "compounds":       compounds,
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # Entry point
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -635,6 +759,7 @@ CONVERTERS = {
     "IrCpSB": convert_ircpsb,
     "TzLib":  convert_tzlib,
     "NOSB":   convert_nosb,
+    "MnSB":   convert_mnsb,
 }
 
 

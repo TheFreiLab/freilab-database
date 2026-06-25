@@ -29,6 +29,16 @@
       "doi": "10.26434/chemrxiv.15005024/v1",
       "compound_count": 176,
       "position_count": 3
+    },
+    {
+      "id": "MnSB",
+      "title": "Manganese(I) Schiff-Base Library",
+      "description": "420 manganese(I) tricarbonyl Schiff-base compounds from a combinatorial library (6 axial ligands × 10 amines × 7 aldehydes), screened for antibacterial activity against MRSA.",
+      "metal": "Mn",
+      "scaffold": "Schiff Base",
+      "doi": "10.1039/D3SC05326A",
+      "compound_count": 420,
+      "position_count": 3
     }
   ]
 }

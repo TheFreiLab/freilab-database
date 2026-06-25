@@ -20,13 +20,17 @@ function fmtNum(n, unit) {
   return n.toFixed(2)
 }
 
-function PropRow({ prop, value }) {
+function PropRow({ prop, value, raw }) {
   const isObj = value !== null && typeof value === 'object'
   const avg   = isObj ? value.avg  : value
   const reps  = isObj ? value.reps : null
   const sd    = isObj ? value.sd   : null
 
   const displayAvg = fmtNum(avg, prop.unit)
+  // MnSB's mic_um is the only property with a non-numeric source value (">100",
+  // a dilution range like "50-25") — raw preserves that literal text outside
+  // the numeric properties system. One-off, not a generic schema feature.
+  const showRaw = prop.key === 'mic_um' && raw
 
   return (
     <tr className="prop-row">
@@ -36,6 +40,7 @@ function PropRow({ prop, value }) {
           ? <span className="prop-avg">{displayAvg}</span>
           : <span className="missing">—</span>
         }
+        {showRaw && <span className="prop-raw"> (reported as {raw})</span>}
         {reps && reps.some(r => r !== null) && (
           <span className="prop-reps">
             [{reps.map((r, i) => (
@@ -152,7 +157,7 @@ export default function CompoundDetailPage() {
                 <h3>QC / Synthesis</h3>
                 <table className="props-table">
                   <tbody>
-                    {grouped.qc.map(p => <PropRow key={p.key} prop={p} value={compound.props[p.key]} />)}
+                    {grouped.qc.map(p => <PropRow key={p.key} prop={p} value={compound.props[p.key]} raw={compound.mic_raw} />)}
                   </tbody>
                 </table>
               </div>
@@ -163,10 +168,10 @@ export default function CompoundDetailPage() {
                 <h3>{groupName}</h3>
                 <table className="props-table">
                   <tbody>
-                    {props.map(p => <PropRow key={p.key} prop={p} value={compound.props[p.key]} />)}
+                    {props.map(p => <PropRow key={p.key} prop={p} value={compound.props[p.key]} raw={compound.mic_raw} />)}
                     {grouped.replicate
                       .filter(p => (p.group ?? 'Other') === groupName)
-                      .map(p => <PropRow key={p.key} prop={p} value={compound.props[p.key]} />)}
+                      .map(p => <PropRow key={p.key} prop={p} value={compound.props[p.key]} raw={compound.mic_raw} />)}
                   </tbody>
                 </table>
               </div>
@@ -181,7 +186,7 @@ export default function CompoundDetailPage() {
                   <h3>Replicates</h3>
                   <table className="props-table">
                     <tbody>
-                      {orphanReplicates.map(p => <PropRow key={p.key} prop={p} value={compound.props[p.key]} />)}
+                      {orphanReplicates.map(p => <PropRow key={p.key} prop={p} value={compound.props[p.key]} raw={compound.mic_raw} />)}
                     </tbody>
                   </table>
                 </div>
@@ -193,7 +198,7 @@ export default function CompoundDetailPage() {
                 <h3>Derived</h3>
                 <table className="props-table">
                   <tbody>
-                    {grouped.derived.map(p => <PropRow key={p.key} prop={p} value={compound.props[p.key]} />)}
+                    {grouped.derived.map(p => <PropRow key={p.key} prop={p} value={compound.props[p.key]} raw={compound.mic_raw} />)}
                   </tbody>
                 </table>
               </div>
@@ -204,7 +209,7 @@ export default function CompoundDetailPage() {
                 <h3>Descriptors (ligand-based)</h3>
                 <table className="props-table">
                   <tbody>
-                    {grouped.descriptor.map(p => <PropRow key={p.key} prop={p} value={compound.props[p.key]} />)}
+                    {grouped.descriptor.map(p => <PropRow key={p.key} prop={p} value={compound.props[p.key]} raw={compound.mic_raw} />)}
                   </tbody>
                 </table>
               </div>

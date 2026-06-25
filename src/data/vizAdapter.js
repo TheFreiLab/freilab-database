@@ -258,6 +258,38 @@ const LIBRARY_CONFIGS = {
       },
     ],
   },
+
+  MnSB: {
+    facetType: 'axial',
+    grids: [
+      {
+        id: 'mnsb',
+        seriesLabel: null,
+        facetPosition:  'AxialLigand',
+        rowPosition:    'Amine',
+        colPosition:    'Aldehyde',
+        facetDisplay:   'selector',
+        compoundFilter: () => true,
+        rowFilter:      null,
+        colFilter:      null,
+        facetFilter:    null,
+        metrics: [
+          {
+            key: 'mic_um', label: 'MIC (MRSA)', unit: 'µM',
+            scale: 'activity', reverse: true, log: true,
+            getValue: c => getPropAvg(c.props.mic_um),
+          },
+        ],
+        scatterAxes: [
+          { key: 'mic_um', label: 'MIC (MRSA) (µM)', getValue: c => getPropAvg(c.props.mic_um), log: true },
+          ...LIGAND_DESCRIPTOR_AXES,
+        ],
+        umapAxes: UMAP_AXES,
+        scatterDefaultX: 'mic_um',
+        scatterDefaultY: 'lig_logp',
+      },
+    ],
+  },
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────

@@ -103,6 +103,13 @@
   margin-left: 0.25rem;
 }
 
+.prop-raw {
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--text-muted);
+  margin-left: 0.5rem;
+}
+
 .missing { color: #d1d5db; }
 
 /* ── 3D viewer ── */

@@ -90,6 +90,13 @@ LIBRARY_SPECS = {
         'ligand_positions': ['Scaffold', 'Aldehyde', 'Amine'],
         'metal_for': lambda blocks: NOSB_SCAFFOLD_METAL[blocks['Scaffold']],
     },
+    'MnSB': {
+        # AxialLigand included (unlike TzLib's null-SMILES Scaffold) since it has
+        # a real, known SMILES for axial codes 1-5 — only "wo" (no ligand) is
+        # None, and fingerprint_for_compound() skips None entries generically.
+        'ligand_positions': ['AxialLigand', 'Amine', 'Aldehyde'],
+        'metal_for': lambda blocks: 'Mn',
+    },
 }
 
 
@@ -126,7 +133,14 @@ def electrum_fingerprint(ligand_smiles, metal, radius, n_bits):
 def fingerprint_for_compound(lib_id, compound, bb_smiles):
     spec = LIBRARY_SPECS[lib_id]
     blocks = compound['blocks']
-    ligand_smiles = '.'.join(bb_smiles[pos][blocks[pos]] for pos in spec['ligand_positions'])
+    # Skip positions with no SMILES (e.g. MnSB's "wo" = no axial ligand) rather
+    # than joining a None into the string — a no-op for every other library,
+    # since their null-SMILES positions (TzLib's Scaffold) are already excluded
+    # from ligand_positions entirely.
+    ligand_smiles = '.'.join(
+        smi for pos in spec['ligand_positions']
+        if (smi := bb_smiles[pos][blocks[pos]])
+    )
     metal = spec['metal_for'](blocks)
     return electrum_fingerprint(ligand_smiles, metal, RADIUS, N_BITS), metal
 
