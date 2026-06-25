@@ -14,15 +14,27 @@ export default function Home() {
       .catch(e => setError(e.message))
   }, [])
 
+  const totalCompounds = manifest
+    ? manifest.libraries.reduce((sum, lib) => sum + lib.compound_count, 0)
+    : null
+
   return (
     <main className="home-page">
       <div className="page-container">
         <div className="page-header">
-          <h1>Compound Libraries</h1>
-          <p className="lead">
-            Searchable, filterable screening data from the Frei Lab's
-            combinatorial metal-complex libraries.
-          </p>
+          <div>
+            <h1>Compound Libraries</h1>
+            <p className="lead">
+              Searchable, filterable screening data from the Frei Lab's
+              combinatorial metal-complex libraries.
+            </p>
+          </div>
+          {totalCompounds !== null && (
+            <div className="total-compounds">
+              <span className="total-compounds-count">{totalCompounds.toLocaleString()}</span>
+              <span className="total-compounds-label">compounds total</span>
+            </div>
+          )}
         </div>
 
         <Link to="/explore" className="explore-callout">

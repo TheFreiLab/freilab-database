@@ -3,12 +3,32 @@
 .page-container { max-width: var(--max-width); margin: 0 auto; }
 
 .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--border);
 }
 .page-header h1 { font-size: 1.75rem; color: #111827; margin-bottom: 0.4rem; }
 .lead { font-size: 1rem; color: var(--text-muted); margin: 0; }
+
+.total-compounds { flex-shrink: 0; text-align: right; }
+.total-compounds-count {
+  display: block;
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1;
+}
+.total-compounds-label {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+  white-space: nowrap;
+}
 
 .explore-callout {
   display: flex;

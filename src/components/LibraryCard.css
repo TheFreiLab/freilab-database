@@ -21,12 +21,13 @@
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
   padding: 2px 8px;
   border-radius: 999px;
 }
+/* Element symbols (Ir, Re, Mn, Ru) are case-sensitive — only the scaffold
+   badge (category text, not chemistry) gets the all-caps treatment. */
 .badge-metal   { background: #dbeafe; color: #1e40af; }
-.badge-scaffold{ background: #d1fae5; color: #065f46; }
+.badge-scaffold{ background: #d1fae5; color: #065f46; text-transform: uppercase; }
 
 .card-title { font-size: 1.1rem; font-weight: 600; color: #111827; margin: 0; }
 
