@@ -36,9 +36,11 @@ export default function Home() {
           </div>
           {totalCompounds !== null && (
             <div className="total-compounds">
-              <span className="total-compounds-count">{totalCompounds.toLocaleString()}</span>
-              <span className="total-compounds-label">compounds total</span>
               <PeriodicTableMini highlight={coveredMetals} />
+              <div className="total-compounds-text">
+                <span className="total-compounds-count">{totalCompounds.toLocaleString()}</span>
+                <span className="total-compounds-label">compounds total</span>
+              </div>
             </div>
           )}
         </div>
