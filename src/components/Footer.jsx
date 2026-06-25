@@ -1,5 +1,11 @@
 import './Footer.css'
 
+// Injected at build time (vite.config.js) — always reflects the actual build/
+// deploy, not something that needs editing by hand on every push.
+const buildDate = new Date(__BUILD_DATE__).toLocaleDateString('en-GB', {
+  day: 'numeric', month: 'short', year: 'numeric',
+})
+
 export default function Footer() {
   return (
     <footer className="site-footer">
@@ -13,6 +19,7 @@ export default function Footer() {
         <span className="footer-note">
           All data from published work · public &amp; read-only
         </span>
+        <span className="footer-note">Last updated {buildDate}</span>
       </div>
     </footer>
   )
