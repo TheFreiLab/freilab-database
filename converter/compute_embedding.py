@@ -153,13 +153,19 @@ def get_prop_avg(v):
     return v.get('avg') if isinstance(v, dict) else v
 
 
-# Properties that mean the same thing across ALL THREE libraries despite different
-# key names, so they're safe to colour by on one shared scale.
+# Properties that mean the same thing across libraries despite different key
+# names, so they're safe to colour by on one shared scale. MnSB isn't listed in
+# any of these (it was deliberately scoped to MIC only, no QC/cytotox data
+# exposed) — its compounds just get None, same as any other missing value.
 CANONICAL_PROPERTIES = {
     # All three libraries report this as % viability/growth at a fixed HEK293T exposure.
     'hek_viability':  {'IrCpSB': 'hek_50',     'TzLib': 'tox_avg',   'NOSB': 'hek_50'},
     # All three report HPLC conversion as a QC metric, same units.
     'conversion_pct': {'IrCpSB': 'conversion', 'TzLib': 'peak_pct',  'NOSB': 'conversion'},
+    # Retention time (min) from the same analytical LC-MS QC step in all three —
+    # exact gradient/method can differ by library, but the unit and what it
+    # represents (a QC retention time, not a potency measurement) are the same.
+    'rt_min':         {'IrCpSB': 'rt_target',  'TzLib': 'rt',        'NOSB': 'rt_target'},
 }
 
 # Antibacterial activity is NOT unified into one canonical key across all libraries:

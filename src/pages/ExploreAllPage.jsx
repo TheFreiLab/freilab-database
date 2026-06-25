@@ -43,6 +43,7 @@ const COLOR_OPTIONS = [
   { key: 'metal',           label: 'Metal',   kind: 'categorical', palette: 'metal', group: GROUP_COMPARABLE },
   { key: 'hek_viability',  label: 'HEK293T viability (%)', kind: 'continuous', scale: 'tox',  group: GROUP_COMPARABLE },
   { key: 'conversion_pct', label: 'Conversion (%)',        kind: 'continuous', scale: 'conv', group: GROUP_COMPARABLE },
+  { key: 'rt_min',         label: 'Retention Time (min)',  kind: 'continuous', scale: 'default', group: GROUP_COMPARABLE },
   { key: 'lig_mw',         label: 'Σ Ligand MW (Da)',      kind: 'continuous', scale: 'default', group: GROUP_COMPARABLE },
   { key: 'lig_tpsa',       label: 'Σ Ligand TPSA (Å²)',    kind: 'continuous', scale: 'default', group: GROUP_COMPARABLE },
   { key: 'lig_logp',       label: 'Mean Ligand logP',      kind: 'continuous', scale: 'default', group: GROUP_COMPARABLE },
@@ -73,6 +74,16 @@ function labelWithLibs(opt) {
     ? `${opt.label} (${opt.libs[0]} only)`
     : `${opt.label} (${opt.libs.join('/')})`
 }
+
+// Compare-tray cards deliberately show a curated subset, not every continuous
+// COLOR_OPTION — showing all of them (incl. every ligand descriptor) made cards
+// too busy to compare at a glance. Bioactivity/toxicity/selectivity assays, plus
+// logP, RT and conversion (the two QC metrics worth keeping) — not MW/TPSA/HBD/
+// HBA/rotatable bonds/aromatic rings.
+const COMPARE_TRAY_KEYS = [
+  'hek_viability', 'conversion_pct', 'rt_min', 'lig_logp',
+  'sa_50_od', 'sa_12_od', 'ec_50_od', 'ec_100_od', 'mic_um', 'sdr_um',
+]
 
 function computeRange(records, key) {
   let min = Infinity, max = -Infinity
@@ -152,14 +163,15 @@ export default function ExploreAllPage() {
     return getMetricColor(v, range.min, range.max, colorOpt.scale, { reverse: colorOpt.reverse, log: colorOpt.log })
   }
 
-  // Properties to show in each compare-tray card: every continuous property that
-  // has a value for at least one compound currently in the tray, independent of
-  // the main "Colour by" selection — so comparing a different property within the
-  // selected panel never touches the main scatter's colouring/zoom/domain.
+  // Properties to show in each compare-tray card: the curated COMPARE_TRAY_KEYS
+  // list, filtered to whichever have a value for at least one compound currently
+  // in the tray. Independent of the main "Colour by" selection — so comparing a
+  // different property within the selected panel never touches the main
+  // scatter's colouring/zoom/domain.
   const compareCols = useMemo(() => {
     if (compareSet.size === 0) return []
     const recs = [...compareSet.values()]
-    return COLOR_OPTIONS.filter(o => o.kind === 'continuous' && recs.some(r => r[o.key] != null))
+    return COLOR_OPTIONS.filter(o => COMPARE_TRAY_KEYS.includes(o.key) && recs.some(r => r[o.key] != null))
   }, [compareSet])
 
   // "Find similar compounds" — Jaccard nearest-neighbor search over the precomputed
