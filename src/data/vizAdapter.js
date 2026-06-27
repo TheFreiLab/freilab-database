@@ -312,7 +312,7 @@ const LIBRARY_CONFIGS = {
             getValue: c => getPropAvg(c.props.mic),
           },
           {
-            key: 'peak_pct', label: 'Peak %', unit: '%',
+            key: 'peak_pct', label: 'Conversion', unit: '%',
             scale: 'conv', reverse: false, log: false,
             getValue: c => getPropAvg(c.props.peak_pct),
           },
@@ -351,7 +351,7 @@ const LIBRARY_CONFIGS = {
             getValue: c => getPropAvg(c.props.mic),
           },
           {
-            key: 'peak_pct', label: 'Peak %', unit: '%',
+            key: 'peak_pct', label: 'Conversion', unit: '%',
             scale: 'conv', reverse: false, log: false,
             getValue: c => getPropAvg(c.props.peak_pct),
           },
