@@ -13,7 +13,7 @@
     {
       "id": "TzLib",
       "title": "Metal-Triazole Combinatorial Library",
-      "description": "864 metal-triazole compounds from two combinatorial series (Tz-4-P and Tz-1-MP) across multiple metal scaffolds (IrCN, Re(CO)₃, Mn(CO)₃, RuCy), screened for antibacterial activity against S. aureus and cytotoxicity against HEK293T cells.",
+      "description": "864 metal-triazole compounds from two combinatorial series (Tz-4-P and Tz-1-MP) across multiple metal scaffolds (IrCN, Re(CO)\u00e2\u201a\u0192, Mn(CO)\u00e2\u201a\u0192, RuCy), screened for antibacterial activity against S. aureus and cytotoxicity against HEK293T cells.",
       "metal": "Ir / Re / Mn / Ru",
       "scaffold": "Triazole",
       "doi": "10.1038/s41467-025-67341-z",
@@ -33,7 +33,7 @@
     {
       "id": "MnSB",
       "title": "Manganese(I) Schiff-Base Library",
-      "description": "420 manganese(I) tricarbonyl Schiff-base compounds from a combinatorial library (6 axial ligands × 10 amines × 7 aldehydes), screened for antibacterial activity against MRSA.",
+      "description": "420 manganese(I) tricarbonyl Schiff-base compounds from a combinatorial library (6 axial ligands \u00c3\u2014 10 amines \u00c3\u2014 7 aldehydes), screened for antibacterial activity against MRSA.",
       "metal": "Mn",
       "scaffold": "Schiff Base",
       "doi": "10.1039/D3SC05326A",
@@ -43,9 +43,9 @@
     {
       "id": "IrCN_Click",
       "title": "IrCN Click-Chemistry Library",
-      "description": "288 cyclometalated iridium(III) click-chemistry compounds from a combinatorial library (3 metal scaffolds × 24 amines × 4 alkynes), screened for antibacterial activity against S. aureus.",
+      "description": "288 cyclometalated iridium(III) click-chemistry compounds from a combinatorial library (3 metal scaffolds \u00c3\u2014 24 amines \u00c3\u2014 4 alkynes), screened for antibacterial activity against S. aureus.",
       "metal": "Ir",
-      "scaffold": "IrCN Click",
+      "scaffold": "CN Click",
       "doi": null,
       "compound_count": 288,
       "position_count": 3
@@ -53,9 +53,9 @@
     {
       "id": "IrCN_Schiff",
       "title": "IrCN Schiff-Base Library",
-      "description": "264 cyclometalated iridium(III) Schiff-base compounds from a combinatorial library (3 metal scaffolds × 8 aldehydes × 11 amines), screened for antibacterial activity against S. aureus.",
+      "description": "264 cyclometalated iridium(III) Schiff-base compounds from a combinatorial library (3 metal scaffolds \u00c3\u2014 8 aldehydes \u00c3\u2014 11 amines), screened for antibacterial activity against S. aureus.",
       "metal": "Ir",
-      "scaffold": "IrCN Schiff Base",
+      "scaffold": "CN Schiff Base",
       "doi": null,
       "compound_count": 264,
       "position_count": 3
