@@ -87,7 +87,7 @@ LIBRARY_META = {
             "screened for antibacterial activity against S. aureus."
         ),
         "metal": "Ir",
-        "scaffold": "IrCN Click",
+        "scaffold": "CN Click",
         "doi": None,
     },
     "IrCN_Schiff": {
@@ -98,7 +98,7 @@ LIBRARY_META = {
             "screened for antibacterial activity against S. aureus."
         ),
         "metal": "Ir",
-        "scaffold": "IrCN Schiff Base",
+        "scaffold": "CN Schiff Base",
         "doi": None,
     },
 }
