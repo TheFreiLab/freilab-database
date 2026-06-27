@@ -290,6 +290,84 @@ const LIBRARY_CONFIGS = {
       },
     ],
   },
+
+  IrCN_Click: {
+    facetType: 'scaffold',
+    grids: [
+      {
+        id: 'ircn-click',
+        seriesLabel: null,
+        facetPosition:  'Scaffold',
+        rowPosition:    'Amine',
+        colPosition:    'Alkyne',
+        facetDisplay:   'selector',
+        compoundFilter: () => true,
+        rowFilter:      null,
+        colFilter:      null,
+        facetFilter:    null,
+        metrics: [
+          {
+            key: 'mic', label: 'MIC (S. aureus)', unit: 'µM',
+            scale: 'activity', reverse: true, log: true,
+            getValue: c => getPropAvg(c.props.mic),
+          },
+          {
+            key: 'peak_pct', label: 'Peak %', unit: '%',
+            scale: 'conv', reverse: false, log: false,
+            getValue: c => getPropAvg(c.props.peak_pct),
+          },
+        ],
+        scatterAxes: [
+          { key: 'mic',      label: 'MIC S. aureus (µM)', getValue: c => getPropAvg(c.props.mic),      log: true  },
+          { key: 'peak_pct', label: 'Conversion (%)',     getValue: c => getPropAvg(c.props.peak_pct), log: false },
+          { key: 'rt',       label: 'RT (min)',           getValue: c => getPropAvg(c.props.rt),       log: false },
+          ...LIGAND_DESCRIPTOR_AXES,
+        ],
+        umapAxes: UMAP_AXES,
+        scatterDefaultX: 'mic',
+        scatterDefaultY: 'lig_logp',
+      },
+    ],
+  },
+
+  IrCN_Schiff: {
+    facetType: 'scaffold',
+    grids: [
+      {
+        id: 'ircn-schiff',
+        seriesLabel: null,
+        facetPosition:  'Scaffold',
+        rowPosition:    'Amine',
+        colPosition:    'Aldehyde',
+        facetDisplay:   'selector',
+        compoundFilter: () => true,
+        rowFilter:      null,
+        colFilter:      null,
+        facetFilter:    null,
+        metrics: [
+          {
+            key: 'mic', label: 'MIC (S. aureus)', unit: 'µM',
+            scale: 'activity', reverse: true, log: true,
+            getValue: c => getPropAvg(c.props.mic),
+          },
+          {
+            key: 'peak_pct', label: 'Peak %', unit: '%',
+            scale: 'conv', reverse: false, log: false,
+            getValue: c => getPropAvg(c.props.peak_pct),
+          },
+        ],
+        scatterAxes: [
+          { key: 'mic',      label: 'MIC S. aureus (µM)', getValue: c => getPropAvg(c.props.mic),      log: true  },
+          { key: 'peak_pct', label: 'Conversion (%)',     getValue: c => getPropAvg(c.props.peak_pct), log: false },
+          { key: 'rt',       label: 'RT (min)',           getValue: c => getPropAvg(c.props.rt),       log: false },
+          ...LIGAND_DESCRIPTOR_AXES,
+        ],
+        umapAxes: UMAP_AXES,
+        scatterDefaultX: 'mic',
+        scatterDefaultY: 'lig_logp',
+      },
+    ],
+  },
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────

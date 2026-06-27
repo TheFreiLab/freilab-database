@@ -59,9 +59,9 @@ const COLOR_OPTIONS = [
   { key: 'sa_12_od',  label: 'S. aureus 12.5µM, OD', kind: 'continuous', scale: 'activity', reverse: true, group: GROUP_SPECIFIC, libs: ['IrCpSB', 'NOSB'] },
   { key: 'ec_50_od',  label: 'E. coli 50µM, OD',     kind: 'continuous', scale: 'activity', reverse: true, group: GROUP_SPECIFIC, libs: ['IrCpSB', 'NOSB'] },
   { key: 'ec_100_od', label: 'E. coli 100µM, OD',    kind: 'continuous', scale: 'activity', reverse: true, group: GROUP_SPECIFIC, libs: ['NOSB'] },
-  // mic_um spans two different organisms/strains (TzLib: S. aureus, MnSB: MRSA) —
+  // mic_um spans multiple organisms/strains (TzLib/IrCN: S. aureus, MnSB: MRSA) —
   // see the LIBRARY_SPECIFIC_PROPERTIES comment in compute_embedding.py.
-  { key: 'mic_um',    label: 'MIC, µM',              kind: 'continuous', scale: 'activity', reverse: true, log: true, group: GROUP_SPECIFIC, libs: ['TzLib', 'MnSB'] },
+  { key: 'mic_um',    label: 'MIC, µM',              kind: 'continuous', scale: 'activity', reverse: true, log: true, group: GROUP_SPECIFIC, libs: ['TzLib', 'MnSB', 'IrCN_Click', 'IrCN_Schiff'] },
   { key: 'sdr_um',    label: 'Selectivity SDR, µM',  kind: 'continuous', scale: 'selectivity',             group: GROUP_SPECIFIC, libs: ['TzLib'] },
 ]
 

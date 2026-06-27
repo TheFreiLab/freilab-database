@@ -15,6 +15,9 @@ export const PALETTE = {
     Free_Tz1MP:   '#2E90C5',
     IrCp:         '#E69F00',
     RuCy:         '#000000',
+    IrCN1:        '#56B4E9',
+    IrCN2:        '#0072B2',
+    IrCN3:        '#E69F00',
   },
 
   // ── Categorical: Cp cores ──────────────────────────────────────────────────
@@ -27,10 +30,12 @@ export const PALETTE = {
 
   // ── Categorical: libraries (cross-library explorer) ───────────────────────
   library: {
-    IrCpSB: '#0072B2',
-    TzLib:  '#D55E00',
-    NOSB:   '#009E73',
-    MnSB:   '#CC79A7',
+    IrCpSB:    '#0072B2',
+    TzLib:     '#D55E00',
+    NOSB:      '#009E73',
+    MnSB:      '#CC79A7',
+    IrCN_Click: '#56B4E9',
+    IrCN_Schiff:'#F0E442',
   },
 
   // ── Categorical: metal identity (cross-library explorer) ──────────────────
@@ -81,6 +86,9 @@ export const SCAFFOLD_LABELS = {
   Free_Tz1MP: 'Free Tz1MP',
   IrCp:       'Ir Cp*',
   RuCy:       'Ru Cymene',
+  IrCN1:      'IrCN (unsubstituted)',
+  IrCN2:      'IrCN (benzo-fused)',
+  IrCN3:      'IrCN (F₂/CF₃)',
 }
 
 export const CP_LABELS = {

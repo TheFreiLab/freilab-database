@@ -97,6 +97,16 @@ LIBRARY_SPECS = {
         'ligand_positions': ['AxialLigand', 'Amine', 'Aldehyde'],
         'metal_for': lambda blocks: 'Mn',
     },
+    'IrCN_Click': {
+        # Scaffold = one phenylpyridine ligand (bis-cyclometalated, but stored once
+        # as the unique BB per variant). All three variants have real SMILES.
+        'ligand_positions': ['Scaffold', 'Amine', 'Alkyne'],
+        'metal_for': lambda blocks: 'Ir',
+    },
+    'IrCN_Schiff': {
+        'ligand_positions': ['Scaffold', 'Aldehyde', 'Amine'],
+        'metal_for': lambda blocks: 'Ir',
+    },
 }
 
 
@@ -160,12 +170,12 @@ def get_prop_avg(v):
 CANONICAL_PROPERTIES = {
     # All three libraries report this as % viability/growth at a fixed HEK293T exposure.
     'hek_viability':  {'IrCpSB': 'hek_50',     'TzLib': 'tox_avg',   'NOSB': 'hek_50'},
-    # All three report HPLC conversion as a QC metric, same units.
-    'conversion_pct': {'IrCpSB': 'conversion', 'TzLib': 'peak_pct',  'NOSB': 'conversion'},
-    # Retention time (min) from the same analytical LC-MS QC step in all three —
-    # exact gradient/method can differ by library, but the unit and what it
-    # represents (a QC retention time, not a potency measurement) are the same.
-    'rt_min':         {'IrCpSB': 'rt_target',  'TzLib': 'rt',        'NOSB': 'rt_target'},
+    # HPLC peak % as a QC metric, same units across libraries.
+    'conversion_pct': {'IrCpSB': 'conversion', 'TzLib': 'peak_pct',  'NOSB': 'conversion',
+                       'IrCN_Click': 'peak_pct', 'IrCN_Schiff': 'peak_pct'},
+    # Retention time (min) from the same analytical LC-MS QC step.
+    'rt_min':         {'IrCpSB': 'rt_target',  'TzLib': 'rt',        'NOSB': 'rt_target',
+                       'IrCN_Click': 'rt',      'IrCN_Schiff': 'rt'},
 }
 
 # Antibacterial activity is NOT unified into one canonical key across all libraries:
@@ -187,7 +197,11 @@ LIBRARY_SPECIFIC_PROPERTIES = {
     'sa_12_od':  {'IrCpSB': 'sa_12', 'NOSB': 'sa_12'},
     'ec_50_od':  {'IrCpSB': 'ec_50', 'NOSB': 'ec_50'},
     'ec_100_od': {'NOSB': 'ec_100'},
-    'mic_um':    {'TzLib': 'mic', 'MnSB': 'mic_um'},
+    # mic_um spans TzLib (S. aureus), MnSB (MRSA), IrCN_Click/Schiff (S. aureus)
+    # — same unit (µM) and measurement type (literal MIC); strain differences noted
+    # in the frontend disclaimer, not silently implied.
+    'mic_um':    {'TzLib': 'mic', 'MnSB': 'mic_um',
+                  'IrCN_Click': 'mic', 'IrCN_Schiff': 'mic'},
     'sdr_um':    {'TzLib': 'sdr'},
 }
 # Ligand descriptors (Stage 7a) already use identical keys/units in every

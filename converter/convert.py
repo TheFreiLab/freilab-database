@@ -79,6 +79,28 @@ LIBRARY_META = {
         "scaffold": "Schiff Base",
         "doi": "10.1039/D3SC05326A",
     },
+    "IrCN_Click": {
+        "title": "IrCN Click-Chemistry Library",
+        "description": (
+            "288 cyclometalated iridium(III) click-chemistry compounds from a "
+            "combinatorial library (3 metal scaffolds × 24 amines × 4 alkynes), "
+            "screened for antibacterial activity against S. aureus."
+        ),
+        "metal": "Ir",
+        "scaffold": "IrCN Click",
+        "doi": None,
+    },
+    "IrCN_Schiff": {
+        "title": "IrCN Schiff-Base Library",
+        "description": (
+            "264 cyclometalated iridium(III) Schiff-base compounds from a "
+            "combinatorial library (3 metal scaffolds × 8 aldehydes × 11 amines), "
+            "screened for antibacterial activity against S. aureus."
+        ),
+        "metal": "Ir",
+        "scaffold": "IrCN Schiff Base",
+        "doi": None,
+    },
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -760,14 +782,207 @@ def convert_mnsb(wb, library_id):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# IrCN_Click / IrCN_Schiff — bis-cyclometalated Ir(III) click and Schiff-base
+# libraries. Both store assembled complex SMILES in a single column; individual
+# BB SMILES are extracted by splitting on '.' (format: [Ir].ppy.ppy.bb3.bb4).
+# ═══════════════════════════════════════════════════════════════════════════════
+
+IRCN_CLICK_POSITIONS = [
+    {"key": "Scaffold", "label": "Metal Scaffold"},
+    {"key": "Amine",    "label": "Amine"},
+    {"key": "Alkyne",   "label": "Alkyne"},
+]
+
+IRCN_CLICK_PROPERTIES = [
+    {"key": "peak_pct", "label": "Peak %",          "unit": "%",   "role": "qc",      "group": None},
+    {"key": "rt",       "label": "Retention Time",   "unit": "min", "role": "qc",      "group": None},
+    {"key": "mic",      "label": "MIC (S. aureus)",  "unit": "µM",  "role": "primary", "group": "Antibacterial"},
+]
+
+IRCN_SCHIFF_POSITIONS = [
+    {"key": "Scaffold",  "label": "Metal Scaffold"},
+    {"key": "Aldehyde",  "label": "Aldehyde"},
+    {"key": "Amine",     "label": "Amine"},
+]
+
+IRCN_SCHIFF_PROPERTIES = [
+    {"key": "peak_pct", "label": "Peak %",          "unit": "%",   "role": "qc",      "group": None},
+    {"key": "rt",       "label": "Retention Time",   "unit": "min", "role": "qc",      "group": None},
+    {"key": "mic",      "label": "MIC (S. aureus)",  "unit": "µM",  "role": "primary", "group": "Antibacterial"},
+]
+
+_IRCN_CLICK_ID_RE  = re.compile(r'^(IrCN[123])_(M\d+)(Y\d+)$')
+_IRCN_SCHIFF_ID_RE = re.compile(r'^(IrCN[123])_(P\d+)(A\d+)$')
+
+
+def _ircn_parse_assembled(cid, assembled, click=True):
+    """Split '[Ir].ppy.ppy.bb3.bb4' into (scaffold_smi, bb3_smi, bb4_smi).
+    Returns None on unexpected fragment count."""
+    frags = assembled.split(".")
+    if len(frags) < 5:
+        print(f"  Warning: {len(frags)} fragments (expected ≥5) for '{cid}' — skipping")
+        return None
+    return frags[1], frags[3], frags[4]
+
+
+def convert_ircn_click(wb, library_id):
+    ws = wb["IrCN click compounds"]
+    data_rows = [r for r in ws.iter_rows(values_only=True)
+                 if r[0] and r[0] != "File_name"]
+    print(f"  {len(data_rows)} compound rows")
+
+    bb_scaffold = {}   # ppy_smi -> scaffold_code (first seen SMILES per scaffold code)
+    scaffold_seen = {} # scaffold_code -> ppy_smi (to avoid duplicate key insertions)
+    bb_amine     = {}  # amine_smi -> amine_code
+    bb_alkyne    = {}  # alkyne_smi -> alkyne_code
+    compounds = []
+    skipped = 0
+
+    for row in data_rows:
+        cid = str(row[0])
+        m = _IRCN_CLICK_ID_RE.match(cid)
+        if not m:
+            print(f"  Warning: cannot parse '{cid}' — skipping")
+            skipped += 1
+            continue
+
+        scaffold_code = m.group(1)   # IrCN1 / IrCN2 / IrCN3
+        amine_code    = m.group(2)   # M1 … M24
+        alkyne_code   = m.group(3)   # Y1 … Y4
+
+        parsed = _ircn_parse_assembled(cid, str(row[1]) if row[1] else "")
+        if parsed is None:
+            skipped += 1
+            continue
+        ppy_smi, amine_smi, alkyne_smi = parsed
+
+        if scaffold_code not in scaffold_seen:
+            scaffold_seen[scaffold_code] = ppy_smi
+            bb_scaffold[ppy_smi] = scaffold_code
+        if amine_smi and amine_smi not in bb_amine:
+            bb_amine[amine_smi] = amine_code
+        if alkyne_smi and alkyne_smi not in bb_alkyne:
+            bb_alkyne[alkyne_smi] = alkyne_code
+
+        compounds.append({
+            "id": cid,
+            "blocks": {"Scaffold": scaffold_code, "Amine": amine_code, "Alkyne": alkyne_code},
+            "props": {
+                "peak_pct": clean_val(row[2]),
+                "rt":       clean_val(row[3]),
+                "mic":      clean_val(row[4]),
+            },
+        })
+
+    if skipped:
+        print(f"  {skipped} rows skipped")
+    print("Generating SVGs ...")
+    building_blocks = render_building_blocks({
+        "Scaffold": bb_scaffold,
+        "Amine":    bb_amine,
+        "Alkyne":   bb_alkyne,
+    })
+    print(f"  Scaffold: {len(building_blocks['Scaffold'])} | "
+          f"Amine: {len(building_blocks['Amine'])} | "
+          f"Alkyne: {len(building_blocks['Alkyne'])}")
+    print(f"  Total compounds: {len(compounds)}")
+
+    meta = LIBRARY_META[library_id]
+    return {
+        "id": library_id, "title": meta["title"], "description": meta["description"],
+        "metal": meta["metal"], "scaffold": meta["scaffold"], "doi": meta["doi"],
+        "positions":       IRCN_CLICK_POSITIONS,
+        "properties":      IRCN_CLICK_PROPERTIES,
+        "building_blocks": building_blocks,
+        "compounds":       compounds,
+    }
+
+
+def convert_ircn_schiff(wb, library_id):
+    ws = wb["IrCN Schiff compounds"]
+    data_rows = [r for r in ws.iter_rows(values_only=True)
+                 if r[0] and r[0] != "New name"]
+    print(f"  {len(data_rows)} compound rows")
+
+    bb_scaffold    = {}  # ppy_smi -> scaffold_code
+    scaffold_seen  = {}  # scaffold_code -> ppy_smi
+    bb_aldehyde    = {}  # ald_smi -> aldehyde_code
+    bb_amine       = {}  # amine_smi -> amine_code
+    compounds = []
+    skipped = 0
+
+    for row in data_rows:
+        cid = str(row[0])
+        m = _IRCN_SCHIFF_ID_RE.match(cid)
+        if not m:
+            print(f"  Warning: cannot parse '{cid}' — skipping")
+            skipped += 1
+            continue
+
+        scaffold_code  = m.group(1)  # IrCN1 / IrCN2 / IrCN3
+        aldehyde_code  = m.group(2)  # P1 … P8
+        amine_code     = m.group(3)  # A1 … A11
+
+        # col[1] is blank; assembled SMILES is at col[2]
+        parsed = _ircn_parse_assembled(cid, str(row[2]) if row[2] else "")
+        if parsed is None:
+            skipped += 1
+            continue
+        ppy_smi, aldehyde_smi, amine_smi = parsed
+
+        if scaffold_code not in scaffold_seen:
+            scaffold_seen[scaffold_code] = ppy_smi
+            bb_scaffold[ppy_smi] = scaffold_code
+        if aldehyde_smi and aldehyde_smi not in bb_aldehyde:
+            bb_aldehyde[aldehyde_smi] = aldehyde_code
+        if amine_smi and amine_smi not in bb_amine:
+            bb_amine[amine_smi] = amine_code
+
+        compounds.append({
+            "id": cid,
+            "blocks": {"Scaffold": scaffold_code, "Aldehyde": aldehyde_code, "Amine": amine_code},
+            "props": {
+                "peak_pct": clean_val(row[3]),
+                "rt":       clean_val(row[4]),
+                "mic":      clean_val(row[5]),
+            },
+        })
+
+    if skipped:
+        print(f"  {skipped} rows skipped")
+    print("Generating SVGs ...")
+    building_blocks = render_building_blocks({
+        "Scaffold": bb_scaffold,
+        "Aldehyde": bb_aldehyde,
+        "Amine":    bb_amine,
+    })
+    print(f"  Scaffold: {len(building_blocks['Scaffold'])} | "
+          f"Aldehyde: {len(building_blocks['Aldehyde'])} | "
+          f"Amine: {len(building_blocks['Amine'])}")
+    print(f"  Total compounds: {len(compounds)}")
+
+    meta = LIBRARY_META[library_id]
+    return {
+        "id": library_id, "title": meta["title"], "description": meta["description"],
+        "metal": meta["metal"], "scaffold": meta["scaffold"], "doi": meta["doi"],
+        "positions":       IRCN_SCHIFF_POSITIONS,
+        "properties":      IRCN_SCHIFF_PROPERTIES,
+        "building_blocks": building_blocks,
+        "compounds":       compounds,
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # Entry point
 # ═══════════════════════════════════════════════════════════════════════════════
 
 CONVERTERS = {
-    "IrCpSB": convert_ircpsb,
-    "TzLib":  convert_tzlib,
-    "NOSB":   convert_nosb,
-    "MnSB":   convert_mnsb,
+    "IrCpSB":     convert_ircpsb,
+    "TzLib":      convert_tzlib,
+    "NOSB":       convert_nosb,
+    "MnSB":       convert_mnsb,
+    "IrCN_Click": convert_ircn_click,
+    "IrCN_Schiff":convert_ircn_schiff,
 }
 
 

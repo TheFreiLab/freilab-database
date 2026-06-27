@@ -39,6 +39,26 @@
       "doi": "10.1039/D3SC05326A",
       "compound_count": 420,
       "position_count": 3
+    },
+    {
+      "id": "IrCN_Click",
+      "title": "IrCN Click-Chemistry Library",
+      "description": "288 cyclometalated iridium(III) click-chemistry compounds from a combinatorial library (3 metal scaffolds × 24 amines × 4 alkynes), screened for antibacterial activity against S. aureus.",
+      "metal": "Ir",
+      "scaffold": "IrCN Click",
+      "doi": null,
+      "compound_count": 288,
+      "position_count": 3
+    },
+    {
+      "id": "IrCN_Schiff",
+      "title": "IrCN Schiff-Base Library",
+      "description": "264 cyclometalated iridium(III) Schiff-base compounds from a combinatorial library (3 metal scaffolds × 8 aldehydes × 11 amines), screened for antibacterial activity against S. aureus.",
+      "metal": "Ir",
+      "scaffold": "IrCN Schiff Base",
+      "doi": null,
+      "compound_count": 264,
+      "position_count": 3
     }
   ]
 }
