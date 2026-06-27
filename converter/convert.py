@@ -215,7 +215,7 @@ IRCPSB_POSITIONS = [
 ]
 
 IRCPSB_PROPERTIES = [
-    {"key": "conversion", "label": "Conversion",         "unit": "%",   "role": "qc",      "group": None,            "col": 4,  "rep_cols": None},
+    {"key": "conversion", "label": "Conversion %",        "unit": "%",   "role": "qc",      "group": None,            "col": 4,  "rep_cols": None},
     {"key": "rt_target",  "label": "RT (Target)",         "unit": "min", "role": "qc",      "group": None,            "col": 5,  "rep_cols": None},
     {"key": "rt_2plus",   "label": "RT (2+)",             "unit": "min", "role": "qc",      "group": None,            "col": 6,  "rep_cols": None},
     {"key": "sa_50",      "label": "S. aureus 50 µM",  "unit": "OD",  "role": "primary", "group": "Antibacterial", "col": 11, "rep_cols": [7, 8, 9, 10]},
@@ -296,8 +296,8 @@ TZ_POSITIONS = [
 ]
 
 TZ_PROPERTIES = [
-    {"key": "peak_pct",  "label": "Peak %",             "unit": "%",   "role": "qc",       "group": None},
-    {"key": "peak_norm", "label": "Peak % (norm.)",     "unit": "%",   "role": "qc",       "group": None},
+    {"key": "peak_pct",  "label": "Conversion %",       "unit": "%",   "role": "qc",       "group": None},
+    {"key": "peak_norm", "label": "Conversion % (norm.)", "unit": "%", "role": "qc",       "group": None},
     {"key": "rt",        "label": "RT",                 "unit": "min", "role": "qc",       "group": None},
     {"key": "sdr",       "label": "SDR (S. aureus)",    "unit": "µM",  "role": "primary",  "group": "Antibacterial"},
     {"key": "mic",       "label": "MIC (S. aureus)",    "unit": "µM",  "role": "primary",  "group": "Antibacterial"},
@@ -535,7 +535,7 @@ NOSB_ALDEHYDE_SMILES = {
 }
 
 NOSB_PROPERTIES = [
-    {"key": "conversion", "label": "Conversion",         "unit": "%",   "role": "qc",       "group": None},
+    {"key": "conversion", "label": "Conversion %",        "unit": "%",   "role": "qc",       "group": None},
     {"key": "rt_target",  "label": "RT (Target)",         "unit": "min", "role": "qc",       "group": None},
     {"key": "sa_50",      "label": "S. aureus 50 µM",     "unit": "OD",  "role": "primary",  "group": "Antibacterial"},
     {"key": "sa_12",      "label": "S. aureus 12.5 µM",   "unit": "OD",  "role": "primary",  "group": "Antibacterial"},
@@ -794,7 +794,7 @@ IRCN_CLICK_POSITIONS = [
 ]
 
 IRCN_CLICK_PROPERTIES = [
-    {"key": "peak_pct", "label": "Peak %",          "unit": "%",   "role": "qc",      "group": None},
+    {"key": "peak_pct", "label": "Conversion %",    "unit": "%",   "role": "qc",      "group": None},
     {"key": "rt",       "label": "Retention Time",   "unit": "min", "role": "qc",      "group": None},
     {"key": "mic",      "label": "MIC (S. aureus)",  "unit": "µM",  "role": "primary", "group": "Antibacterial"},
 ]
@@ -806,7 +806,7 @@ IRCN_SCHIFF_POSITIONS = [
 ]
 
 IRCN_SCHIFF_PROPERTIES = [
-    {"key": "peak_pct", "label": "Peak %",          "unit": "%",   "role": "qc",      "group": None},
+    {"key": "peak_pct", "label": "Conversion %",    "unit": "%",   "role": "qc",      "group": None},
     {"key": "rt",       "label": "Retention Time",   "unit": "min", "role": "qc",      "group": None},
     {"key": "mic",      "label": "MIC (S. aureus)",  "unit": "µM",  "role": "primary", "group": "Antibacterial"},
 ]
