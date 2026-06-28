@@ -103,11 +103,20 @@ export default function SelectivityScatter({ library, mode = 'free' }) {
     el.style.top  = top  + 'px'
   })
 
-  if (!adapted || !grid) return null
+  const axes = adapted && grid ? (mode === 'umap' ? grid.umapAxes : grid.scatterAxes) : []
+  const xAxis = axes.find(a => a.key === xKey) ?? axes[0] ?? null
+  const yAxis = axes.find(a => a.key === yKey) ?? axes[1] ?? null
 
-  const axes = mode === 'umap' ? grid.umapAxes : grid.scatterAxes
-  const xAxis = axes.find(a => a.key === xKey) ?? axes[0]
-  const yAxis = axes.find(a => a.key === yKey) ?? axes[1]
+  const points = useMemo(() => {
+    if (!grid || !xAxis || !yAxis) return []
+    return grid.compounds.map(c => {
+      const x = xAxis.getValue(c)
+      const y = yAxis.getValue(c)
+      return { compound: c, x, y }
+    }).filter(p => p.x !== null && p.y !== null && isFinite(p.x) && isFinite(p.y))
+  }, [grid, xAxis, yAxis])
+
+  if (!adapted || !grid) return null
 
   const colorableAxes = mode === 'umap' ? buildColorableAxes(grid) : null
   const colorAxis = colorableAxes?.find(a => a.key === colorKey) ?? null
@@ -121,14 +130,6 @@ export default function SelectivityScatter({ library, mode = 'free' }) {
       reverse: colorAxis.reverse, log: colorAxis.log,
     })
   }
-
-  const points = useMemo(() => {
-    return grid.compounds.map(c => {
-      const x = xAxis.getValue(c)
-      const y = yAxis.getValue(c)
-      return { compound: c, x, y }
-    }).filter(p => p.x !== null && p.y !== null && isFinite(p.x) && isFinite(p.y))
-  }, [grid.compounds, xAxis, yAxis])
 
   const xs = points.map(p => p.x)
   const ys = points.map(p => p.y)

@@ -21,30 +21,25 @@ export default function LibraryGrid({ library }) {
   const [sortCols,    setSortCols]    = useState(false)
   const [highlightRow, setHighlightRow] = useState(null)
   const [highlightCol, setHighlightCol] = useState(null)
-  const [hovered,     setHovered]     = useState(null)   // { compound, clientX, clientY }
+  const [hovered,     setHovered]     = useState(null)
   const [pinned,      setPinned]      = useState(null)
 
-  if (!adapted) {
-    return <p style={{ color: '#9CA3AF', padding: '1rem' }}>No visualisation config for this library.</p>
-  }
+  const grid           = adapted?.grids[seriesIdx] ?? null
+  const metrics        = grid?.allMetrics ?? []
+  const activeMetric   = metrics.find(m => m.key === activeMetricKey) ?? metrics[0] ?? null
+  const effectiveFacet = facetCode ?? grid?.facetCodes[0] ?? null
 
-  const grid = adapted.grids[seriesIdx]
-  const metrics = grid.allMetrics
-  const activeMetric = metrics.find(m => m.key === activeMetricKey) ?? metrics[0]
-
-  // Facet code: default to first on series change
-  const effectiveFacet = facetCode ?? grid.facetCodes[0] ?? null
-
-  // Filter compounds to current facet (for selector mode)
   const facetCompounds = useMemo(() => {
+    if (!grid) return []
     if (grid.facetDisplay !== 'selector') return grid.compounds
     return grid.compounds.filter(c => c._facet === effectiveFacet)
   }, [grid, effectiveFacet])
 
-  // Compute range across ALL facets for consistent colour scale
-  const range = useMemo(() => computeRange(grid.compounds, activeMetric), [grid.compounds, activeMetric])
+  const range = useMemo(() => {
+    if (!grid || !activeMetric) return { min: 0, max: 1 }
+    return computeRange(grid.compounds, activeMetric)
+  }, [grid, activeMetric])
 
-  // ── Sorted row/col codes ─────────────────────────────────────────────────
   const computeSortedCodes = useCallback((compounds, codes, dim, doSort, metric) => {
     if (!doSort) return codes
     const key = dim === 'row' ? '_row' : '_col'
@@ -56,18 +51,25 @@ export default function LibraryGrid({ library }) {
     return [...codes].sort((a, b) => means[b] - means[a])
   }, [])
 
-  // For selector mode: use filtered compounds for sort
-  const rowCodes = useMemo(() =>
-    computeSortedCodes(facetCompounds, grid.rowCodes, 'row', sortRows, activeMetric),
-    [facetCompounds, grid.rowCodes, sortRows, activeMetric, computeSortedCodes]
-  )
-  const colCodes = useMemo(() =>
-    computeSortedCodes(facetCompounds, grid.colCodes, 'col', sortCols, activeMetric),
-    [facetCompounds, grid.colCodes, sortCols, activeMetric, computeSortedCodes]
-  )
+  const rowCodes = useMemo(() => {
+    if (!grid || !activeMetric) return []
+    return computeSortedCodes(facetCompounds, grid.rowCodes, 'row', sortRows, activeMetric)
+  }, [facetCompounds, grid, sortRows, activeMetric, computeSortedCodes])
 
-  const rowAgg = useMemo(() => computeAggregates(facetCompounds, rowCodes, colCodes, activeMetric, 'row'), [facetCompounds, rowCodes, colCodes, activeMetric])
-  const colAgg = useMemo(() => computeAggregates(facetCompounds, rowCodes, colCodes, activeMetric, 'col'), [facetCompounds, rowCodes, colCodes, activeMetric])
+  const colCodes = useMemo(() => {
+    if (!grid || !activeMetric) return []
+    return computeSortedCodes(facetCompounds, grid.colCodes, 'col', sortCols, activeMetric)
+  }, [facetCompounds, grid, sortCols, activeMetric, computeSortedCodes])
+
+  const rowAgg = useMemo(() => {
+    if (!activeMetric) return {}
+    return computeAggregates(facetCompounds, rowCodes, colCodes, activeMetric, 'row')
+  }, [facetCompounds, rowCodes, colCodes, activeMetric])
+
+  const colAgg = useMemo(() => {
+    if (!activeMetric) return {}
+    return computeAggregates(facetCompounds, rowCodes, colCodes, activeMetric, 'col')
+  }, [facetCompounds, rowCodes, colCodes, activeMetric])
 
   const handleHover = useCallback((compound, clientX, clientY) => {
     setHovered(compound ? { compound, clientX, clientY } : null)
@@ -79,6 +81,10 @@ export default function LibraryGrid({ library }) {
     if (dim === 'row') setHighlightRow(r => (r === code ? null : code))
     else               setHighlightCol(c => (c === code ? null : code))
   }, [])
+
+  if (!adapted) {
+    return <p style={{ color: '#9CA3AF', padding: '1rem' }}>No visualisation config for this library.</p>
+  }
 
   // When series changes reset volatile state
   const handleSeriesChange = (idx) => {
