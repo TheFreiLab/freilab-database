@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useLayoutEffect, useRef, useCallback } from 'react'
 import { PALETTE, getMetricColor } from '../../theme/palette'
 import { computeRange } from '../../data/vizAdapter'
 
@@ -165,7 +165,7 @@ export default function GridCanvas({
   const fgRef  = useRef(null)
   const layout = computeLayout(rowCodes.length, colCodes.length, isSmall)
   const layoutRef = useRef(layout)
-  layoutRef.current = layout
+  useLayoutEffect(() => { layoutRef.current = layout })
 
   const maxRowAgg = Math.max(0, ...Object.values(rowAgg).filter(v => v !== null))
   const maxColAgg = Math.max(0, ...Object.values(colAgg).filter(v => v !== null))
