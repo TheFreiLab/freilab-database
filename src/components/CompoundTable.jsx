@@ -67,13 +67,6 @@ export default function CompoundTable({ library, compounds }) {
     setPage(1)
   }
 
-  // Reset page when upstream filter changes the compound list
-  const prevCompoundsRef = useRef(compounds)
-  if (prevCompoundsRef.current !== compounds) {
-    prevCompoundsRef.current = compounds
-    // Don't call setPage here — causes render loop. Use the safePage clamp below.
-  }
-
   const filtered = useMemo(() => {
     let list = compounds
 
