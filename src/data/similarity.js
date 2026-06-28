@@ -1,6 +1,6 @@
 // Client-side Jaccard/Tanimoto nearest-neighbor search over the binarized, bit-packed
 // ELECTRUM fingerprints written by converter/compute_embedding.py --combined ("fp" field,
-// base64 of 75 bytes / 598 bits). Computed on demand, not precomputed: 2,480 compounds x 75
+// base64 of 75 bytes / 598 bits). Computed on demand, not precomputed: 3,452 compounds x 75
 // bytes is trivial to scan in full on every click or slider move.
 
 const POPCOUNT = new Uint8Array(256)
